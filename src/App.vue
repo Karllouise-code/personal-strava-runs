@@ -1,7 +1,6 @@
 <template>
-  <div class="bg-dark min-h-screen text-light font-fira-sans">
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;500;700&display=swap" rel="stylesheet" />
-
+  <div class="bg-dark min-h-screen text-light font-roboto">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
     <header class="bg-gradient-to-r from-gray-800 to-green-900 text-white text-center py-5 sticky top-0 z-10 shadow-lg">
       <h1 class="text-2xl font-bold animate-fade-in">My Running Journey</h1>
       <p class="mt-2 text-sm">Powered by Strava | Coding Fast, Running Faster! 🏃‍♂️</p>
@@ -77,21 +76,21 @@
             <p class="text-lg text-white mt-2" v-if="statsActivities.length"><Counter :end-val="parseFloat(totalDistance)" :duration="2000" :decimals="1" /> km</p>
             <p class="text-lg text-gray-400 mt-2" v-else>Loading...</p>
           </div>
-          <div class="bg-card bg-opacity-80 backdrop-blur-lg rounded-xl p-6 shadow-xl border border-orange-600/20 hover:scale-102 transition-transform">
+          <div class="bg-card bg-opacity-80 backdrop-blur-lg rounded-xl p-6 shadow-xl border border-orange-600/20 hover:scale-102 transition-all">
             <h3 class="text-lg font-medium text-teal-400">Average Pace</h3>
             <p class="text-lg text-white mt-2"><Counter :end-val="parseFloat(averagePace)" :duration="2000" :decimals="2" /> min/km</p>
           </div>
-          <div class="bg-card bg-opacity-80 backdrop-blur-lg rounded-xl p-6 shadow-xl border border-orange-600/20 hover:scale-102 transition-transform">
+          <div class="bg-card bg-opacity-80 backdrop-blur-lg rounded-xl p-6 shadow-xl border border-orange-600/20 hover:scale-102 transition-all">
             <h3 class="text-lg font-medium text-teal-400">Longest {{ combineStats ? "Activity" : activeTab === "runs" ? "Run" : "Walk" }}</h3>
             <p class="text-lg text-white mt-2">{{ longestActivity }}</p>
           </div>
         </div>
       </section>
 
-      <section class="my-10">
+      <section class="my-6">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-semibold text-white">{{ combineChart ? "Activity" : activeTab === "runs" ? "Run" : "Walk" }} Weekly Progress</h2>
-          <label class="flex items-center text-sm text-teal-400">
+          <label class="flex items-center text-sm text-orange-400">
             <input type="checkbox" v-model="combineChart" class="mr-2 focus:ring-orange-600" />
             Combine
           </label>
@@ -102,24 +101,35 @@
         </div>
       </section>
 
-      <section class="my-10">
+      <section class="my-6">
         <div class="flex justify-between items-center mb-6">
-          <h3 class="text-lg font-medium text-teal-400">500 km Goal</h3>
-          <label class="flex items-center text-sm text-teal-400">
-            <input type="checkbox" v-model="combineGoal" class="mr-2 focus:ring-orange-600" />
+          <h3 class="text-lg font-medium text-teal-400">{{ goalKilometers }} km Goal</h3>
+          <label class="flex items-center text-sm text-orange-400">
+            <input type="checkbox" v-model="combineGoals" class="mr-2 focus:ring-0" />
             Combine
           </label>
         </div>
         <div class="bg-card rounded-xl p-6">
+          <div class="flex flex-col sm:flex-row gap-3 mb-4">
+            <div class="flex flex-col">
+              <label for="goalStartDate" class="text-sm text-teal-400 mb-1">Start Date</label>
+              <input id="goalStartDate" type="date" v-model="goalStartDate" class="bg-dark text-white border-0 border-b-2 border-gray-600 p-2 rounded focus:border-orange-500 focus:ring-0 transition-all w-full sm:w-auto text-sm" />
+            </div>
+            <div class="flex flex-col">
+              <label for="goalKilometers" class="text-sm text-teal-400 mb-1">Goal (km)</label>
+              <input id="goalKilometers" type="number" v-model.number="goalKilometers" min="1" step="1" placeholder="500" class="bg-dark text-white border-0 border-b-2 border-gray-600 p-2 rounded focus:border-orange-500 focus:ring-0 transition-all w-full sm:w-auto text-sm" />
+            </div>
+          </div>
           <div class="w-full bg-gray-700 rounded-full h-2.5">
-            <div :style="{ width: (goalDistance / 500) * 100 + '%' }" class="bg-orange-600 h-2.5 rounded-full"></div>
+            <div :style="{ width: Math.min((goalDistance / goalKilometers) * 100, 100) + '%' }" class="bg-orange-600 h-2.5 rounded-full"></div>
           </div>
           <p class="text-white mt-2">
-            {{ goalDistance }} / 500 km<small class="text-gray-400 text-xsm mt-1"> ({{ ((goalDistance / 500) * 100).toFixed(1) }}% of goal)</small>
+            {{ goalDistance }} / {{ goalKilometers }} km
+            <small class="text-gray-400 text-xs mt-1">({{ ((goalDistance / goalKilometers) * 100).toFixed(1) }}% of goal)</small>
           </p>
-          <div v-if="combineGoal">
-            <p class="text-gray-400 text-sm mt-1">Run: {{ goalActivities.filter((activity) => activity.type === "Run").reduce((sum, activity) => sum + (activity.distance || 0), 0) / 1000 }} km</p>
-            <p class="text-gray-400 text-sm mt-1">Walk: {{ goalActivities.filter((activity) => activity.type === "Walk").reduce((sum, activity) => sum + (activity.distance || 0), 0) / 1000 }} km</p>
+          <div v-if="combineGoals">
+            <p class="text-gray-400 text-sm mt-1">Run: {{ (goalActivities.filter((activity) => activity.type === "Run").reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000).toFixed(1) }} km</p>
+            <p class="text-gray-400 text-sm mt-1">Walk: {{ (goalActivities.filter((activity) => activity.type === "Walk").reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000).toFixed(1) }} km</p>
           </div>
         </div>
       </section>
@@ -146,11 +156,13 @@ export default {
       startDate: "",
       endDate: "",
       perPage: "10",
-      activeTab: "runs", // Default to Runs tab
-      combineActivities: false, // Checkbox for Recent Activities
-      combineStats: false, // Checkbox for Stats
-      combineChart: false, // Checkbox for Weekly Progress
-      combineGoal: false, // Checkbox for 500 km Goal
+      activeTab: "runs",
+      combineActivities: false,
+      combineStats: false,
+      combineChart: false,
+      combineGoals: false,
+      goalStartDate: "", // New: Custom start date for goal
+      goalKilometers: 500, // New: Customizable goal (default 500 km)
     };
   },
   computed: {
@@ -189,8 +201,20 @@ export default {
       return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
     },
     goalActivities() {
-      if (this.combineGoal) return this.baseFilteredActivities;
-      return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
+      let filtered = this.baseFilteredActivities;
+      if (this.combineGoals) {
+        // Apply goalStartDate filter for combined activities
+        if (this.goalStartDate) {
+          filtered = filtered.filter((activity) => new Date(activity.start_date_local) >= new Date(this.goalStartDate));
+        }
+        return filtered;
+      }
+      // Apply goalStartDate and type filter for tab-specific activities
+      filtered = filtered.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
+      if (this.goalStartDate) {
+        filtered = filtered.filter((activity) => new Date(activity.start_date_local) >= new Date(this.goalStartDate));
+      }
+      return filtered;
     },
     totalDistance() {
       const distance = this.statsActivities.reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000;
@@ -284,8 +308,15 @@ export default {
     combineChart() {
       // No fetch needed, just re-render chart
     },
-    combineGoal() {
+    combineGoals() {
       // No fetch needed, just re-compute goal distance
+    },
+    goalStartDate() {
+      // No fetch needed, just re-compute goal activities
+    },
+    goalKilometers() {
+      // Ensure goalKilometers is positive
+      if (this.goalKilometers < 1) this.goalKilometers = 1;
     },
   },
   mounted() {
@@ -295,8 +326,8 @@ export default {
 </script>
 
 <style scoped>
-.font-fira-sans {
-  font-family: "Fira Sans", sans-serif;
+.font-roboto {
+  font-family: "Roboto", sans-serif;
 }
 
 .bg-dark {
@@ -309,6 +340,10 @@ export default {
 
 .text-light {
   color: #e0e0e0;
+}
+
+.text-xsm {
+  font-size: 0.75rem;
 }
 
 .hover\:scale-102:hover {
