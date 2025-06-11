@@ -29,3 +29,4 @@ dist-ssr
 .env.production
 
 .vscode/
+server/personal-strava-runs-firebase-adminsdk-fbsvc-e577d85c90.json
