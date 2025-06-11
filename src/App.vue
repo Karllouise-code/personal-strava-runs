@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-dark min-h-screen text-light font-inter">
+  <div class="bg-dark min-h-screen text-light font-fira-sans">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;500;700&display=swap" rel="stylesheet" />
+
     <header class="bg-gradient-to-r from-gray-800 to-green-900 text-white text-center py-5 sticky top-0 z-10 shadow-lg">
       <h1 class="text-2xl font-bold animate-fade-in">My Running Journey</h1>
       <p class="mt-2 text-sm">Powered by Strava | Coding Fast, Running Faster! 🏃‍♂️</p>
@@ -293,8 +295,8 @@ export default {
 </script>
 
 <style scoped>
-.font-inter {
-  font-family: "Inter", sans-serif;
+.font-fira-sans {
+  font-family: "Fira Sans", sans-serif;
 }
 
 .bg-dark {
