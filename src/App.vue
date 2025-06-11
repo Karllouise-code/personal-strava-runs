@@ -7,7 +7,13 @@
 
     <main class="max-w-4xl mx-auto p-6">
       <section class="my-6">
-        <h2 class="text-2xl font-semibold text-white mb-6">Recent Activities</h2>
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-semibold text-white">Recent Activities</h2>
+          <label class="flex items-center text-sm text-teal-400">
+            <input type="checkbox" v-model="combineActivities" class="mr-2 focus:ring-orange-600" />
+            Combine
+          </label>
+        </div>
         <div class="bg-card bg-opacity-80 backdrop-blur-lg rounded-xl p-6 shadow-xl mb-6">
           <!-- Navigation Tabs -->
           <div class="flex border-b border-gray-600 mb-6">
@@ -29,7 +35,7 @@
           </div>
 
           <!-- Activity Table -->
-          <p v-if="!sortedActivities.length" class="text-gray-400">No {{ activeTab === "runs" ? "runs" : "walks" }} match your filters. Try adjusting them!</p>
+          <p v-if="!sortedTableActivities.length" class="text-gray-400">No {{ combineActivities ? "activities" : activeTab === "runs" ? "runs" : "walks" }} match your filters. Try adjusting them!</p>
           <table v-else class="w-full text-left">
             <thead>
               <tr class="border-b border-gray-600">
@@ -37,15 +43,17 @@
                 <th class="py-3 cursor-pointer text-orange-500 hover:text-orange-400 transition-all" @click="sortBy('distance')">Distance {{ sortKey === "distance" ? (sortOrder === -1 ? "↓" : "↑") : "" }}</th>
                 <th class="py-3 cursor-pointer text-orange-500 hover:text-orange-400 transition-all" @click="sortBy('moving_time')">Time {{ sortKey === "moving_time" ? (sortOrder === -1 ? "↓" : "↑") : "" }}</th>
                 <th class="py-3 cursor-pointer text-orange-500 hover:text-orange-400 transition-all" @click="sortBy('pace')">Pace {{ sortKey === "pace" ? (sortOrder === -1 ? "↓" : "↑") : "" }}</th>
+                <th class="py-3 text-orange-500" v-if="combineActivities">Type</th>
                 <th class="py-3 text-orange-500">Name</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="activity in sortedActivities" :key="activity.id" :class="isPR(activity) ? 'bg-orange-600/20' : ''" class="hover:scale-102 transition-transform duration-200 border-b border-gray-700 last:border-0 text-sm">
+              <tr v-for="activity in sortedTableActivities" :key="activity.id" :class="isPR(activity, combineActivities ? null : activeTab === 'runs' ? 'Run' : 'Walk') ? 'bg-orange-600/20' : ''" class="hover:scale-102 transition-transform duration-200 border-b border-gray-700 last:border-0 text-sm">
                 <td class="py-3">{{ formatDate(activity.start_date_local) }}</td>
                 <td class="py-3 text-right">{{ (activity.distance / 1000).toFixed(1) }} km</td>
                 <td class="py-3 text-right">{{ formatTime(activity.moving_time) }}</td>
                 <td class="py-3 text-right">{{ (activity.moving_time / 60 / (activity.distance / 1000)).toFixed(2) }} min/km</td>
+                <td class="py-3" v-if="combineActivities">{{ activity.type }}</td>
                 <td class="py-3">{{ activity.type === "Run" ? "🏃‍♂️" : "🚶‍♂️" }} {{ activity.name }}</td>
               </tr>
             </tbody>
@@ -54,11 +62,17 @@
       </section>
 
       <section class="my-10">
-        <h2 class="text-2xl font-semibold mb-6 text-white">{{ activeTab === "runs" ? "Run" : "Walk" }} Stats</h2>
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-semibold text-white">{{ combineStats ? "Activity" : activeTab === "runs" ? "Run" : "Walk" }} Stats</h2>
+          <label class="flex items-center text-sm text-teal-400">
+            <input type="checkbox" v-model="combineStats" class="mr-2 focus:ring-orange-600" />
+            Combine
+          </label>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="bg-card bg-opacity-80 backdrop-blur-lg rounded-xl p-6 shadow-xl border border-orange-600/20 hover:scale-102 transition-transform">
             <h3 class="text-lg font-medium text-teal-400">Total Distance</h3>
-            <p class="text-lg text-white mt-2" v-if="filteredActivities.length"><Counter :end-val="parseFloat(totalDistance)" :duration="2000" :decimals="1" /> km</p>
+            <p class="text-lg text-white mt-2" v-if="statsActivities.length"><Counter :end-val="parseFloat(totalDistance)" :duration="2000" :decimals="1" /> km</p>
             <p class="text-lg text-gray-400 mt-2" v-else>Loading...</p>
           </div>
           <div class="bg-card bg-opacity-80 backdrop-blur-lg rounded-xl p-6 shadow-xl border border-orange-600/20 hover:scale-102 transition-transform">
@@ -66,27 +80,47 @@
             <p class="text-lg text-white mt-2"><Counter :end-val="parseFloat(averagePace)" :duration="2000" :decimals="2" /> min/km</p>
           </div>
           <div class="bg-card bg-opacity-80 backdrop-blur-lg rounded-xl p-6 shadow-xl border border-orange-600/20 hover:scale-102 transition-transform">
-            <h3 class="text-lg font-medium text-teal-400">Longest {{ activeTab === "runs" ? "Run" : "Walk" }}</h3>
+            <h3 class="text-lg font-medium text-teal-400">Longest {{ combineStats ? "Activity" : activeTab === "runs" ? "Run" : "Walk" }}</h3>
             <p class="text-lg text-white mt-2">{{ longestActivity }}</p>
           </div>
         </div>
       </section>
 
       <section class="my-10">
-        <h2 class="text-2xl font-semibold mb-6 text-white">{{ activeTab === "runs" ? "Run" : "Walk" }} Weekly Progress</h2>
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-semibold text-white">{{ combineChart ? "Activity" : activeTab === "runs" ? "Run" : "Walk" }} Weekly Progress</h2>
+          <label class="flex items-center text-sm text-teal-400">
+            <input type="checkbox" v-model="combineChart" class="mr-2 focus:ring-orange-600" />
+            Combine
+          </label>
+        </div>
         <div class="bg-card bg-opacity-80 backdrop-blur-lg rounded-xl p-6 shadow-xl">
-          <WeeklyChart v-if="filteredActivities.length" :runs="filteredActivities" />
+          <WeeklyChart v-if="chartActivities.length" :runs="chartActivities" />
           <p v-else class="text-gray-400">No data to display.</p>
         </div>
       </section>
 
-      <div class="bg-card rounded-xl p-6">
-        <h3 class="text-lg font-medium text-teal-400">500 km Goal</h3>
-        <div class="w-full bg-gray-700 rounded-full h-2.5">
-          <div :style="{ width: (totalDistance / 500) * 100 + '%' }" class="bg-orange-600 h-2.5 rounded-full"></div>
+      <section class="my-10">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-lg font-medium text-teal-400">500 km Goal</h3>
+          <label class="flex items-center text-sm text-teal-400">
+            <input type="checkbox" v-model="combineGoal" class="mr-2 focus:ring-orange-600" />
+            Combine
+          </label>
         </div>
-        <p class="text-white mt-2">{{ totalDistance }} / 500 km</p>
-      </div>
+        <div class="bg-card rounded-xl p-6">
+          <div class="w-full bg-gray-700 rounded-full h-2.5">
+            <div :style="{ width: (goalDistance / 500) * 100 + '%' }" class="bg-orange-600 h-2.5 rounded-full"></div>
+          </div>
+          <p class="text-white mt-2">
+            {{ goalDistance }} / 500 km<small class="text-gray-400 text-xsm mt-1"> ({{ ((goalDistance / 500) * 100).toFixed(1) }}% of goal)</small>
+          </p>
+          <div v-if="combineGoal">
+            <p class="text-gray-400 text-sm mt-1">Run: {{ goalActivities.filter((activity) => activity.type === "Run").reduce((sum, activity) => sum + (activity.distance || 0), 0) / 1000 }} km</p>
+            <p class="text-gray-400 text-sm mt-1">Walk: {{ goalActivities.filter((activity) => activity.type === "Walk").reduce((sum, activity) => sum + (activity.distance || 0), 0) / 1000 }} km</p>
+          </div>
+        </div>
+      </section>
     </main>
     <footer class="bg-gray-900 text-gray-400 text-center py-6">
       <p>© 2025 Karl Louise Rito. Built with 🏃‍♂️ and 💻</p>
@@ -111,11 +145,15 @@ export default {
       endDate: "",
       perPage: "10",
       activeTab: "runs", // Default to Runs tab
+      combineActivities: false, // Checkbox for Recent Activities
+      combineStats: false, // Checkbox for Stats
+      combineChart: false, // Checkbox for Weekly Progress
+      combineGoal: false, // Checkbox for 500 km Goal
     };
   },
   computed: {
-    filteredActivities() {
-      let filtered = this.activities.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
+    baseFilteredActivities() {
+      let filtered = [...this.activities];
       if (this.searchName) {
         filtered = filtered.filter((activity) => activity.name.toLowerCase().includes(this.searchName.toLowerCase()));
       }
@@ -127,30 +165,51 @@ export default {
       }
       return filtered;
     },
-    sortedActivities() {
+    tableActivities() {
+      if (this.combineActivities) return this.baseFilteredActivities;
+      return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
+    },
+    sortedTableActivities() {
       const sortKey = this.sortKey;
       const order = this.sortOrder;
-      return [...this.filteredActivities].sort((a, b) => {
+      return [...this.tableActivities].sort((a, b) => {
         if (sortKey === "start_date_local") return order * (new Date(b[sortKey]) - new Date(a[sortKey]));
         if (sortKey === "pace") return order * (b.moving_time / 60 / (b.distance / 1000) - a.moving_time / 60 / (a.distance / 1000));
         return order * (b[sortKey] - a[sortKey]);
       });
     },
+    statsActivities() {
+      if (this.combineStats) return this.baseFilteredActivities;
+      return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
+    },
+    chartActivities() {
+      if (this.combineChart) return this.baseFilteredActivities;
+      return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
+    },
+    goalActivities() {
+      if (this.combineGoal) return this.baseFilteredActivities;
+      return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
+    },
     totalDistance() {
-      const distance = this.filteredActivities.reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000;
-      console.log("Total Distance:", distance, "Activities:", this.filteredActivities);
+      const distance = this.statsActivities.reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000;
+      console.log("Total Distance (Stats):", distance, "Activities:", this.statsActivities);
+      return distance.toFixed(1);
+    },
+    goalDistance() {
+      const distance = this.goalActivities.reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000;
+      console.log("Goal Distance:", distance, "Activities:", this.goalActivities);
       return distance.toFixed(1);
     },
     averagePace() {
-      const totalTime = this.filteredActivities.reduce((sum, activity) => sum + Number(activity.moving_time || 0), 0) / 60;
-      const totalDistance = this.filteredActivities.reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000;
+      const totalTime = this.statsActivities.reduce((sum, activity) => sum + Number(activity.moving_time || 0), 0) / 60;
+      const totalDistance = this.statsActivities.reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000;
       const pace = totalDistance ? totalTime / totalDistance : 0;
       console.log("Average Pace:", pace, "Total Time:", totalTime, "Total Distance:", totalDistance);
       return pace.toFixed(2);
     },
     longestActivity() {
-      const activity = this.filteredActivities.reduce((max, activity) => (Number(activity.distance || 0) > Number(max.distance || 0) ? activity : max), { distance: 0 });
-      return activity.distance ? `${(activity.distance / 1000).toFixed(1)} km on ${this.formatDate(activity.start_date_local)}` : "N/A";
+      const activity = this.statsActivities.reduce((max, activity) => (Number(activity.distance || 0) > Number(max.distance || 0) ? activity : max), { distance: 0 });
+      return activity.distance ? `${(activity.distance / 1000).toFixed(1)} km${this.combineStats ? ` (${activity.type})` : ""} on ${this.formatDate(activity.start_date_local)}` : "N/A";
     },
   },
   methods: {
@@ -185,9 +244,10 @@ export default {
         console.error("Error fetching activities:", error.message);
       }
     },
-    isPR(activity) {
+    isPR(activity, type = null) {
+      const relevantActivities = type ? this.tableActivities.filter((a) => a.type === type) : this.tableActivities;
       const pace = activity.moving_time / 60 / (activity.distance / 1000);
-      const paces = this.filteredActivities.map((a) => a.moving_time / 60 / (a.distance / 1000)).filter((p) => !isNaN(p));
+      const paces = relevantActivities.map((a) => a.moving_time / 60 / (a.distance / 1000)).filter((p) => !isNaN(p));
       const fastest = Math.min(...paces);
       return pace === fastest && !isNaN(pace);
     },
@@ -212,6 +272,18 @@ export default {
     },
     activeTab() {
       // No fetch needed, just re-filter activities
+    },
+    combineActivities() {
+      // No fetch needed, just re-render table
+    },
+    combineStats() {
+      // No fetch needed, just re-compute stats
+    },
+    combineChart() {
+      // No fetch needed, just re-render chart
+    },
+    combineGoal() {
+      // No fetch needed, just re-compute goal distance
     },
   },
   mounted() {
