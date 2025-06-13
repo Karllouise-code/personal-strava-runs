@@ -38,7 +38,9 @@ async function refreshAccessToken() {
   }
 }
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://karlritostrava.netlify.app'
+}));
 
 app.get("/", (req, res) => {
   res.send("Welcome to My Running Site Backend! Use /api/activities to fetch run and walk data.");
