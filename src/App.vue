@@ -128,8 +128,8 @@
             <small class="text-gray-400 text-xs mt-1">({{ ((goalDistance / goalKilometers) * 100).toFixed(1) }}% of goal)</small>
           </p>
           <div v-if="combineGoals">
-            <p class="text-gray-400 text-sm mt-1">Run: {{ (goalActivities.filter((activity) => activity.type === "Run").reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000).toFixed(1) }} km</p>
-            <p class="text-gray-400 text-sm mt-1">Walk: {{ (goalActivities.filter((activity) => activity.type === "Walk").reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000).toFixed(1) }} km</p>
+            <p class="text-gray-400 text-sm mt-1">Run: {{ (goalActivities.filter((activity) => activity.type === 'Run').reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000).toFixed(1) }} km</p>
+            <p class="text-gray-400 text-sm mt-1">Walk: {{ (goalActivities.filter((activity) => activity.type === 'Walk').reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000).toFixed(1) }} km</p>
           </div>
         </div>
       </section>
@@ -141,27 +141,27 @@
 </template>
 
 <script>
-import WeeklyChart from "./components/WeeklyChart.vue";
-import Counter from "./components/Counter.vue";
-import { db } from "./services/firebase.js";
+import WeeklyChart from './components/WeeklyChart.vue';
+import Counter from './components/Counter.vue';
+import { db } from './services/firebase.js';
 
 export default {
   components: { WeeklyChart, Counter },
   data() {
     return {
       activities: [],
-      sortKey: "start_date_local",
+      sortKey: 'start_date_local',
       sortOrder: -1,
-      searchName: "",
-      startDate: "",
-      endDate: "",
-      perPage: "10",
-      activeTab: "runs",
+      searchName: '',
+      startDate: '',
+      endDate: '',
+      perPage: '10',
+      activeTab: 'runs',
       combineActivities: false,
       combineStats: false,
       combineChart: false,
       combineGoals: false,
-      goalStartDate: "", // New: Custom start date for goal
+      goalStartDate: '', // New: Custom start date for goal
       goalKilometers: 500, // New: Customizable goal (default 500 km)
     };
   },
@@ -181,24 +181,24 @@ export default {
     },
     tableActivities() {
       if (this.combineActivities) return this.baseFilteredActivities;
-      return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
+      return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === 'runs' ? 'Run' : 'Walk'));
     },
     sortedTableActivities() {
       const sortKey = this.sortKey;
       const order = this.sortOrder;
       return [...this.tableActivities].sort((a, b) => {
-        if (sortKey === "start_date_local") return order * (new Date(b[sortKey]) - new Date(a[sortKey]));
-        if (sortKey === "pace") return order * (b.moving_time / 60 / (b.distance / 1000) - a.moving_time / 60 / (a.distance / 1000));
+        if (sortKey === 'start_date_local') return order * (new Date(b[sortKey]) - new Date(a[sortKey]));
+        if (sortKey === 'pace') return order * (b.moving_time / 60 / (b.distance / 1000) - a.moving_time / 60 / (a.distance / 1000));
         return order * (b[sortKey] - a[sortKey]);
       });
     },
     statsActivities() {
       if (this.combineStats) return this.baseFilteredActivities;
-      return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
+      return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === 'runs' ? 'Run' : 'Walk'));
     },
     chartActivities() {
       if (this.combineChart) return this.baseFilteredActivities;
-      return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
+      return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === 'runs' ? 'Run' : 'Walk'));
     },
     goalActivities() {
       let filtered = this.baseFilteredActivities;
@@ -210,7 +210,7 @@ export default {
         return filtered;
       }
       // Apply goalStartDate and type filter for tab-specific activities
-      filtered = filtered.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
+      filtered = filtered.filter((activity) => activity.type === (this.activeTab === 'runs' ? 'Run' : 'Walk'));
       if (this.goalStartDate) {
         filtered = filtered.filter((activity) => new Date(activity.start_date_local) >= new Date(this.goalStartDate));
       }
@@ -218,30 +218,37 @@ export default {
     },
     totalDistance() {
       const distance = this.statsActivities.reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000;
-      console.log("Total Distance (Stats):", distance, "Activities:", this.statsActivities);
+      console.log('Total Distance (Stats):', distance, 'Activities:', this.statsActivities);
       return distance.toFixed(1);
     },
     goalDistance() {
       const distance = this.goalActivities.reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000;
-      console.log("Goal Distance:", distance, "Activities:", this.goalActivities);
+      console.log('Goal Distance:', distance, 'Activities:', this.goalActivities);
       return distance.toFixed(1);
     },
     averagePace() {
       const totalTime = this.statsActivities.reduce((sum, activity) => sum + Number(activity.moving_time || 0), 0) / 60;
       const totalDistance = this.statsActivities.reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000;
       const pace = totalDistance ? totalTime / totalDistance : 0;
-      console.log("Average Pace:", pace, "Total Time:", totalTime, "Total Distance:", totalDistance);
+      console.log('Average Pace:', pace, 'Total Time:', totalTime, 'Total Distance:', totalDistance);
       return pace.toFixed(2);
     },
     longestActivity() {
-      const activity = this.statsActivities.reduce((max, activity) => (Number(activity.distance || 0) > Number(max.distance || 0) ? activity : max), { distance: 0 });
-      return activity.distance ? `${(activity.distance / 1000).toFixed(1)} km${this.combineStats ? ` (${activity.type})` : ""} on ${this.formatDate(activity.start_date_local)}` : "N/A";
+      const activity = this.statsActivities.reduce(
+        (max, activity) => (Number(activity.distance || 0) > Number(max.distance || 0) ? activity : max),
+        { distance: 0 },
+      );
+      return activity.distance
+        ? `${(activity.distance / 1000).toFixed(1)} km${this.combineStats ? ` (${activity.type})` : ''} on ${this.formatDate(
+            activity.start_date_local,
+          )}`
+        : 'N/A';
     },
   },
   methods: {
     sortBy(key) {
       this.sortOrder = this.sortKey === key ? -this.sortOrder : -1;
-      this.sortKey = key === "pace" ? "pace" : key;
+      this.sortKey = key === 'pace' ? 'pace' : key;
     },
     formatDate(date) {
       return new Date(date).toLocaleDateString();
@@ -250,24 +257,24 @@ export default {
       const hrs = Math.floor(seconds / 3600);
       const mins = Math.floor((seconds % 3600) / 60);
       const secs = seconds % 60;
-      return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+      return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     },
     async fetchActivities() {
       try {
-        console.log("Fetching activities from http://localhost:3000/api/activities");
+        console.log('Fetching activities from', import.meta.env.VITE_API_URL);
         const params = new URLSearchParams();
-        params.append("per_page", this.perPage);
-        if (this.startDate) params.append("after", this.startDate);
-        if (this.endDate) params.append("before", this.endDate);
-        const response = await fetch(`http://localhost:3000/api/activities?${params.toString()}`);
+        params.append('per_page', this.perPage);
+        if (this.startDate) params.append('after', this.startDate);
+        if (this.endDate) params.append('before', this.endDate);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}?${params.toString()}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        console.log("Fetched activities:", data);
+        console.log('Fetched activities:', data);
         this.activities = data;
       } catch (error) {
-        console.error("Error fetching activities:", error.message);
+        console.error('Error fetching activities:', error.message);
       }
     },
     isPR(activity, type = null) {
@@ -281,8 +288,8 @@ export default {
       const now = new Date();
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
       const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      this.startDate = firstDay.toISOString().split("T")[0];
-      this.endDate = lastDay.toISOString().split("T")[0];
+      this.startDate = firstDay.toISOString().split('T')[0];
+      this.endDate = lastDay.toISOString().split('T')[0];
       this.fetchActivities();
     },
   },
@@ -327,7 +334,7 @@ export default {
 
 <style scoped>
 .font-roboto {
-  font-family: "Roboto", sans-serif;
+  font-family: 'Roboto', sans-serif;
 }
 
 .bg-dark {
