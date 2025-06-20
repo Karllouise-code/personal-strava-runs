@@ -39,7 +39,7 @@ async function refreshAccessToken() {
 }
 
 app.use(cors({
-  // origin: 'https://karlritostrava.netlify.app' // Uncomment to restrict CORS
+  origin: 'https://karlritostrava.netlify.app' // Uncomment to restrict CORS
 }));
 
 app.get("/", (req, res) => {
