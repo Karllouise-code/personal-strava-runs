@@ -39,22 +39,24 @@ async function refreshAccessToken() {
 }
 
 app.use(cors({
-  origin: 'https://karlritostrava.netlify.app'
+  // origin: 'https://karlritostrava.netlify.app' // Uncomment to restrict CORS
 }));
 
 app.get("/", (req, res) => {
-  res.send("Welcome to My Running Site Backend! Use /api/activities to fetch run and walk data.");
+  res.send("Welcome to My Running Site Backend! Use /api/activities to fetch run or walk data.");
 });
 
 app.get("/api/activities", async (req, res) => {
   try {
-    const { per_page = 10, after, before } = req.query;
+    const { per_page = 10, after, before, type } = req.query;
     const perPage = Math.min(parseInt(per_page, 10), 200); // Cap at Strava's max
     const afterTimestamp = after ? Math.floor(new Date(after).getTime() / 1000) : 0;
     const beforeTimestamp = before ? Math.floor(new Date(before).getTime() / 1000) : Math.floor(Date.now() / 1000);
+    const activityType = type === 'Run' || type === 'Walk' ? type : null; // Validate type
 
     // Check Firestore cache first
     let query = db.collection("activities");
+    if (activityType) query = query.where("type", "==", activityType);
     if (after) query = query.where("start_date_local", ">=", new Date(after).toISOString());
     if (before) query = query.where("start_date_local", "<=", new Date(before).toISOString());
     const activitiesSnapshot = await query.orderBy("start_date_local", "desc").limit(perPage).get();
@@ -62,21 +64,38 @@ app.get("/api/activities", async (req, res) => {
     const lastSync = (await db.collection("metadata").doc("sync").get()).data()?.lastSync || 0;
     const oneDay = 24 * 60 * 60 * 1000;
 
-    if (cachedActivities.length >= perPage && Date.now() - lastSync < oneDay && (!after || !before || cachedActivities.length >= perPage)) {
+    if (cachedActivities.length >= perPage && Date.now() - lastSync < oneDay) {
       console.log("Serving cached activities:", cachedActivities.length);
       return res.json(cachedActivities);
     }
 
     // Fetch from Strava
     console.log("Fetching from Strava with token:", STRAVA_ACCESS_TOKEN.slice(0, 10) + "...");
-    const params = { per_page: perPage };
-    if (afterTimestamp) params.after = afterTimestamp;
-    if (beforeTimestamp) params.before = beforeTimestamp;
-    const response = await axios.get("https://www.strava.com/api/v3/athlete/activities", {
-      headers: { Authorization: `Bearer ${STRAVA_ACCESS_TOKEN}` },
-      params,
-    });
-    const activities = response.data.filter((activity) => (activity.type === "Run" || activity.type === "Walk") && Number(activity.distance) > 0 && Number(activity.moving_time) > 0);
+    let allActivities = [];
+    let page = 1;
+    let fetchedActivities = [];
+
+    // Fetch enough activities to satisfy perPage of the specific type
+    do {
+      const params = { per_page: 50, page }; // Fetch in batches
+      if (afterTimestamp) params.after = afterTimestamp;
+      if (beforeTimestamp) params.before = beforeTimestamp;
+      const response = await axios.get("https://www.strava.com/api/v3/athlete/activities", {
+        headers: { Authorization: `Bearer ${STRAVA_ACCESS_TOKEN}` },
+        params,
+      });
+      fetchedActivities = response.data.filter(
+        (activity) =>
+          (!activityType || activity.type === activityType) &&
+          Number(activity.distance) > 0 &&
+          Number(activity.moving_time) > 0
+      );
+      allActivities = allActivities.concat(fetchedActivities);
+      page++;
+    } while (fetchedActivities.length > 0 && allActivities.length < perPage);
+
+    // Take only the requested number of activities
+    const activities = allActivities.slice(0, perPage);
 
     // Save to Firestore
     const batch = db.batch();
@@ -100,18 +119,36 @@ app.get("/api/activities", async (req, res) => {
       console.log("Token expired, refreshing...");
       try {
         await refreshAccessToken();
-        const { per_page = 10, after, before } = req.query;
+        const { per_page = 10, after, before, type } = req.query;
         const perPage = Math.min(parseInt(per_page, 10), 200);
         const afterTimestamp = after ? Math.floor(new Date(after).getTime() / 1000) : 0;
         const beforeTimestamp = before ? Math.floor(new Date(before).getTime() / 1000) : Math.floor(Date.now() / 1000);
-        const params = { per_page: perPage };
-        if (afterTimestamp) params.after = afterTimestamp;
-        if (beforeTimestamp) params.before = beforeTimestamp;
-        const response = await axios.get("https://www.strava.com/api/v3/athlete/activities", {
-          headers: { Authorization: `Bearer ${STRAVA_ACCESS_TOKEN}` },
-          params,
-        });
-        const activities = response.data.filter((activity) => (activity.type === "Run" || activity.type === "Walk") && Number(activity.distance) > 0 && Number(activity.moving_time) > 0);
+        const activityType = type === 'Run' || type === 'Walk' ? type : null;
+
+        let allActivities = [];
+        let page = 1;
+        let fetchedActivities = [];
+
+        do {
+          const params = { per_page: 50, page };
+          if (afterTimestamp) params.after = afterTimestamp;
+          if (beforeTimestamp) params.before = beforeTimestamp;
+          const response = await axios.get("https://www.strava.com/api/v3/athlete/activities", {
+            headers: { Authorization: `Bearer ${STRAVA_ACCESS_TOKEN}` },
+            params,
+          });
+          fetchedActivities = response.data.filter(
+            (activity) =>
+              (!activityType || activity.type === activityType) &&
+              Number(activity.distance) > 0 &&
+              Number(activity.moving_time) > 0
+          );
+          allActivities = allActivities.concat(fetchedActivities);
+          page++;
+        } while (fetchedActivities.length > 0 && allActivities.length < perPage);
+
+        const activities = allActivities.slice(0, perPage);
+
         const batch = db.batch();
         activities.forEach((activity) => {
           const activityRef = db.collection("activities").doc(activity.id.toString());
