@@ -8,8 +8,7 @@
     </header>
 
     <main class="max-w-5xl mx-auto px-6 py-8 space-y-10">
-      <StatsSection :activities="statsActivities" :total-distance="totalDistance" :average-pace="averagePace" :longest-activity="longestActivity" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" />
-      <WeeklyProgressSection :activities="chartActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" />
+      <StatsSection :activities="statsActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" />
       <OverallGoalSection :goal-start-date="goalStartDate" :goal-kilometers="goalKilometers" :goal-distance="goalDistance" :goal-activities="goalActivities" :combine="combine" @update:goal-start-date="goalStartDate = $event" @update:goal-kilometers="goalKilometers = $event" />
       <WeeklyGoalSection :weekly-goal-kilometers="weeklyGoalKilometers" :weekly-goal-distance="weeklyGoalDistance" :weekly-goal-activities="weeklyGoalActivities" :weekly-start-date="weeklyStartDate" :combine="combine" @update:weekly-goal-kilometers="weeklyGoalKilometers = $event" />
       <ActivitiesSection :activities="sortedTableActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" :per-page="perPage" :search-name="searchName" :start-date="startDate" :end-date="endDate" :sort-key="sortKey" :sort-order="sortOrder" @update:combine="combine = $event" @update:active-tab="activeTab = $event" @update:search-name="searchName = $event" @update:start-date="startDate = $event" @update:end-date="endDate = $event" @update:per-page="perPage = $event" @sort="sortBy" @set-this-month="setThisMonth" />
@@ -18,7 +17,6 @@
     <nav class="fixed top-1/2 right-6 transform -translate-y-1/2 bg-white/[0.03] backdrop-blur-2xl rounded-2xl border border-white/[0.06] shadow-2xl p-3 z-30 hidden md:block">
       <ul class="space-y-1">
         <li><a href="#stats" @click.prevent="scrollToSection('stats')" class="block px-4 py-2 text-xs font-medium text-[#86868b] hover:text-[#fc4c02] rounded-xl hover:bg-white/[0.05] transition-colors">Stats</a></li>
-        <li><a href="#weekly-progress" @click.prevent="scrollToSection('weekly-progress')" class="block px-4 py-2 text-xs font-medium text-[#86868b] hover:text-[#fc4c02] rounded-xl hover:bg-white/[0.05] transition-colors">Progress</a></li>
         <li><a href="#overall-goals" @click.prevent="scrollToSection('overall-goals')" class="block px-4 py-2 text-xs font-medium text-[#86868b] hover:text-[#fc4c02] rounded-xl hover:bg-white/[0.05] transition-colors">Goals</a></li>
         <li><a href="#weekly-goals" @click.prevent="scrollToSection('weekly-goals')" class="block px-4 py-2 text-xs font-medium text-[#86868b] hover:text-[#fc4c02] rounded-xl hover:bg-white/[0.05] transition-colors">Weekly</a></li>
         <li><a href="#recent-activities" @click.prevent="scrollToSection('recent-activities')" class="block px-4 py-2 text-xs font-medium text-[#86868b] hover:text-[#fc4c02] rounded-xl hover:bg-white/[0.05] transition-colors">Activities</a></li>
@@ -33,14 +31,13 @@
 
 <script>
 import StatsSection from "./components/StatsSection.vue";
-import WeeklyProgressSection from "./components/WeeklyProgressSection.vue";
 import OverallGoalSection from "./components/OverallGoalSection.vue";
 import WeeklyGoalSection from "./components/WeeklyGoalSection.vue";
 import ActivitiesSection from "./components/ActivitiesSection.vue";
 import { db } from "./services/firebase.js";
 
 export default {
-  components: { StatsSection, WeeklyProgressSection, OverallGoalSection, WeeklyGoalSection, ActivitiesSection },
+  components: { StatsSection, OverallGoalSection, WeeklyGoalSection, ActivitiesSection },
   data() {
     return {
       activities: [],
@@ -92,10 +89,6 @@ export default {
       if (this.combine) return this.baseFilteredActivities;
       return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
     },
-    chartActivities() {
-      if (this.combine) return this.baseFilteredActivities;
-      return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
-    },
     goalActivities() {
       let filtered = this.baseFilteredActivities;
       if (this.combine) {
@@ -110,26 +103,10 @@ export default {
       }
       return filtered;
     },
-    totalDistance() {
-      const distance = this.statsActivities.reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000;
-      console.log("Total Distance (Stats):", distance, "Activities:", this.statsActivities);
-      return distance.toFixed(1);
-    },
     goalDistance() {
       const distance = this.goalActivities.reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000;
       console.log("Goal Distance:", distance, "Activities:", this.goalActivities);
       return distance.toFixed(1);
-    },
-    averagePace() {
-      const totalTime = this.statsActivities.reduce((sum, activity) => sum + Number(activity.moving_time || 0), 0) / 60;
-      const totalDistance = this.statsActivities.reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000;
-      const pace = totalDistance ? totalTime / totalDistance : 0;
-      console.log("Average Pace:", pace, "Total Time:", totalTime, "Total Distance:", totalDistance);
-      return pace.toFixed(2);
-    },
-    longestActivity() {
-      const activity = this.statsActivities.reduce((max, activity) => (Number(activity.distance || 0) > Number(max.distance || 0) ? activity : max), { distance: 0 });
-      return activity.distance ? `${(activity.distance / 1000).toFixed(1)} km${this.combine ? ` (${activity.type})` : ""} on ${this.formatDate(activity.start_date_local)}` : "N/A";
     },
     weeklyStartDate() {
       const now = new Date();
@@ -162,15 +139,6 @@ export default {
     sortBy(key) {
       this.sortOrder = this.sortKey === key ? -this.sortOrder : -1;
       this.sortKey = key === "pace" ? "pace" : key;
-    },
-    formatDate(date) {
-      return new Date(date).toLocaleDateString();
-    },
-    formatTime(seconds) {
-      const hrs = Math.floor(seconds / 3600);
-      const mins = Math.floor((seconds % 3600) / 60);
-      const secs = seconds % 60;
-      return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     },
     async fetchActivities() {
       this.isLoading = true;
