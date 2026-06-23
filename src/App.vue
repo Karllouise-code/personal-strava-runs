@@ -185,10 +185,7 @@ export default {
 
         if (!this.combine && !this.goalStartDate) params.append("type", this.activeTab === "runs" ? "Run" : "Walk");
 
-        const opts = { method: "GET" };
-        if (import.meta.env.PROD) opts.credentials = "include";
-
-        const response = await fetch(`${this.apiUrl("/api/activities")}?${params.toString()}`, opts);
+        const response = await fetch(`${this.apiUrl("/api/activities")}?${params.toString()}`, { method: "GET" });
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
         console.log("Fetched activities:", data);
