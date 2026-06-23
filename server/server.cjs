@@ -55,6 +55,14 @@ app.use(express.json());
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function getTokens(req) {
+  const auth = req.headers.authorization;
+  if (auth && auth.startsWith("Bearer ")) {
+    return {
+      accessToken: auth.slice(7),
+      refreshToken: req.headers["x-refresh-token"] || null,
+      isSession: false,
+    };
+  }
   if (req.session && req.session.accessToken) {
     return {
       accessToken: req.session.accessToken,
@@ -69,7 +77,7 @@ function getTokens(req) {
   };
 }
 
-async function refreshTokens(req, tokens) {
+async function refreshTokens(req, res, tokens, isBearer) {
   try {
     const response = await axios.post("https://www.strava.com/oauth/token", {
       client_id: CLIENT_ID,
@@ -80,7 +88,10 @@ async function refreshTokens(req, tokens) {
     const newAccess = response.data.access_token;
     const newRefresh = response.data.refresh_token || tokens.refreshToken;
 
-    if (tokens.isSession) {
+    if (isBearer && res) {
+      res.set("X-New-Access-Token", newAccess);
+      res.set("X-New-Refresh-Token", newRefresh);
+    } else if (tokens.isSession) {
       req.session.accessToken = newAccess;
       req.session.refreshToken = newRefresh;
     } else {
@@ -143,12 +154,13 @@ app.get("/auth/strava/callback", async (req, res) => {
 
     const athlete = response.data.athlete;
     const athleteData = { id: athlete.id, firstname: athlete.firstname, lastname: athlete.lastname, avatar: athlete.profile_medium };
+    const authData = { athlete: athleteData, accessToken: response.data.access_token, refreshToken: response.data.refresh_token, expiresAt: response.data.expires_at };
     req.session.accessToken = response.data.access_token;
     req.session.refreshToken = response.data.refresh_token;
     req.session.athlete = athleteData;
     req.session.tokenExpiresAt = response.data.expires_at;
 
-    const encoded = Buffer.from(JSON.stringify(athleteData)).toString("base64");
+    const encoded = Buffer.from(JSON.stringify(authData)).toString("base64");
     res.redirect(`${FRONTEND_URL}?auth=${encoded}`);
   } catch (error) {
     console.error("Strava OAuth callback error:", error.response?.data || error.message);
@@ -237,7 +249,8 @@ app.get("/api/activities", async (req, res) => {
     if (error.response && error.response.status === 401) {
       console.log("Token expired, refreshing...");
       try {
-        const newAccess = await refreshTokens(req, tokens);
+        const isBearer = !!req.headers.authorization?.startsWith("Bearer ");
+        const newAccess = await refreshTokens(req, res, tokens, isBearer);
         const { per_page = 10, after, before, type } = req.query;
         const perPage = Math.min(parseInt(per_page, 10), 200);
         const afterTimestamp = after ? Math.floor(new Date(after).getTime() / 1000) : 0;

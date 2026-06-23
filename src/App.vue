@@ -165,6 +165,12 @@ export default {
       if (import.meta.env.DEV) return path;
       return `${this.apiBase}${path}`;
     },
+    authHeaders() {
+      const tokens = sessionStorage.getItem("stravaTokens");
+      if (!tokens) return {};
+      const parsed = JSON.parse(tokens);
+      return { Authorization: `Bearer ${parsed.accessToken}`, "X-Refresh-Token": parsed.refreshToken };
+    },
     async fetchActivities() {
       this.isLoading = true;
       try {
@@ -185,7 +191,17 @@ export default {
 
         if (!this.combine && !this.goalStartDate) params.append("type", this.activeTab === "runs" ? "Run" : "Walk");
 
-        const response = await fetch(`${this.apiUrl("/api/activities")}?${params.toString()}`, { method: "GET" });
+        const headers = { ...this.authHeaders() };
+        const response = await fetch(`${this.apiUrl("/api/activities")}?${params.toString()}`, { method: "GET", headers });
+
+        const newAccess = response.headers.get("X-New-Access-Token");
+        if (newAccess) {
+          const tokens = JSON.parse(sessionStorage.getItem("stravaTokens") || "{}");
+          tokens.accessToken = newAccess;
+          tokens.refreshToken = response.headers.get("X-New-Refresh-Token") || tokens.refreshToken;
+          sessionStorage.setItem("stravaTokens", JSON.stringify(tokens));
+        }
+
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
         console.log("Fetched activities:", data);
@@ -215,9 +231,10 @@ export default {
         const params = new URLSearchParams(window.location.search);
         const authParam = params.get("auth");
         if (authParam) {
-          const athlete = JSON.parse(atob(authParam));
-          this.authUser = athlete;
-          sessionStorage.setItem("stravaAthlete", JSON.stringify(athlete));
+          const data = JSON.parse(atob(authParam));
+          this.authUser = data.athlete;
+          sessionStorage.setItem("stravaAthlete", JSON.stringify(data.athlete));
+          sessionStorage.setItem("stravaTokens", JSON.stringify({ accessToken: data.accessToken, refreshToken: data.refreshToken }));
           window.history.replaceState({}, "", window.location.pathname);
           this.authLoading = false;
           return;
@@ -249,6 +266,7 @@ export default {
     async logout() {
       this.authUser = null;
       sessionStorage.removeItem("stravaAthlete");
+      sessionStorage.removeItem("stravaTokens");
       try {
         const opts = { method: "POST", headers: { "Content-Type": "application/json" } };
         if (import.meta.env.PROD) opts.credentials = "include";
