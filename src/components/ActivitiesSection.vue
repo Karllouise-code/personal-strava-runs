@@ -38,7 +38,7 @@
       </template>
       <p v-else-if="!activities.length" class="px-5 pb-5 text-sm text-[#86868b]">No {{ combine ? "activities" : activeTab === "runs" ? "runs" : "walks" }} match your filters.</p>
       <div v-else class="divide-y divide-white/[0.04]">
-        <div v-for="activity in activities" :key="activity.id" class="flex items-center gap-3 px-5 py-4 hover:bg-white/[0.02] transition-colors" :class="isPR(activity) ? 'bg-[#fc4c02]/10' : ''">
+        <div v-for="activity in paginatedActivities" :key="activity.id" class="flex items-center gap-3 px-5 py-4 hover:bg-white/[0.02] transition-colors" :class="isPR(activity) ? 'bg-[#fc4c02]/10' : ''">
           <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" :class="activity.type === 'Run' ? 'bg-[#fc4c02]' : 'bg-teal-400'"></span>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium truncate">{{ activity.name }}</p>
@@ -53,13 +53,16 @@
             <p class="text-xs text-[#86868b]">{{ (activity.moving_time / 60 / (activity.distance / 1000)).toFixed(2) }} min/km</p>
           </div>
         </div>
-        <div class="flex items-center gap-3 px-5 py-3 bg-white/[0.02]">
-          <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-[#86868b]"></span>
-          <div class="flex-1">
+        <div class="flex items-center justify-between px-5 py-3 bg-white/[0.02] border-t border-white/[0.04]">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-[#86868b]"></span>
             <p class="text-xs font-medium uppercase tracking-wider text-[#86868b]">Total</p>
+            <p class="text-sm font-semibold text-white ml-2">{{ totalKm }}</p>
           </div>
-          <div class="text-right">
-            <p class="text-sm font-semibold text-white">{{ totalKm }}</p>
+          <div class="flex items-center gap-3">
+            <button :disabled="page <= 1" class="text-xs text-[#86868b] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors" @click="prevPage">← Prev</button>
+            <span class="text-xs text-[#86868b]">Page {{ page }} of {{ totalPages }}</span>
+            <button :disabled="page >= totalPages" class="text-xs text-[#86868b] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors" @click="nextPage">Next →</button>
           </div>
         </div>
       </div>
@@ -81,13 +84,37 @@ export default {
     sortKey: { type: String, required: true },
     sortOrder: { type: Number, required: true },
   },
+  data() {
+    return {
+      page: 1,
+    };
+  },
   computed: {
+    totalPages() {
+      return Math.max(1, Math.ceil(this.activities.length / parseInt(this.perPage)));
+    },
+    paginatedActivities() {
+      const perPage = parseInt(this.perPage);
+      const start = (this.page - 1) * perPage;
+      return this.activities.slice(start, start + perPage);
+    },
     totalKm() {
       const total = this.activities.reduce((sum, a) => sum + Number(a.distance || 0), 0) / 1000;
       return total.toFixed(1) + " km";
     },
   },
+  watch: {
+    activities() {
+      this.page = 1;
+    },
+  },
   methods: {
+    prevPage() {
+      if (this.page > 1) this.page--;
+    },
+    nextPage() {
+      if (this.page < this.totalPages) this.page++;
+    },
     formatDate(date) {
       return new Date(date).toLocaleDateString();
     },

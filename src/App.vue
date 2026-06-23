@@ -11,7 +11,7 @@
       <StatsSection :activities="statsSourceActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" />
       <OverallGoalSection :goal-start-date="goalStartDate" :goal-kilometers="goalKilometers" :goal-distance="goalDistance" :goal-activities="goalActivities" :combine="combine" @update:goal-start-date="goalStartDate = $event" @update:goal-kilometers="goalKilometers = $event" />
       <WeeklyGoalSection :weekly-goal-kilometers="weeklyGoalKilometers" :weekly-goal-distance="weeklyGoalDistance" :weekly-goal-activities="weeklyGoalActivities" :weekly-start-date="weeklyStartDate" :combine="combine" @update:weekly-goal-kilometers="weeklyGoalKilometers = $event" />
-      <ActivitiesSection :activities="sortedTableActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" :per-page="perPage" :search-name="searchName" :start-date="startDate" :end-date="endDate" :sort-key="sortKey" :sort-order="sortOrder" @update:combine="combine = $event" @update:active-tab="activeTab = $event" @update:search-name="searchName = $event" @update:start-date="startDate = $event" @update:end-date="endDate = $event" @update:per-page="perPage = $event" @sort="sortBy" @set-this-month="setThisMonth" />
+      <ActivitiesSection :activities="sortedActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" :per-page="perPage" :search-name="searchName" :start-date="startDate" :end-date="endDate" :sort-key="sortKey" :sort-order="sortOrder" @update:combine="combine = $event" @update:active-tab="activeTab = $event" @update:search-name="searchName = $event" @update:start-date="startDate = $event" @update:end-date="endDate = $event" @update:per-page="perPage = $event" @sort="sortBy" @set-this-month="setThisMonth" />
     </main>
 
     <nav class="fixed top-1/2 right-6 transform -translate-y-1/2 bg-white/[0.03] backdrop-blur-2xl rounded-2xl border border-white/[0.06] shadow-2xl p-3 z-30 hidden md:block">
@@ -74,16 +74,14 @@ export default {
       if (this.combine) return this.baseFilteredActivities;
       return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
     },
-    sortedTableActivities() {
+    sortedActivities() {
       const sortKey = this.sortKey;
       const order = this.sortOrder;
-      return [...this.tableActivities]
-        .sort((a, b) => {
-          if (sortKey === "start_date_local") return order * (new Date(b[sortKey]) - new Date(a[sortKey]));
-          if (sortKey === "pace") return order * (b.moving_time / 60 / (b.distance / 1000) - a.moving_time / 60 / (a.distance / 1000));
-          return order * (b[sortKey] - a[sortKey]);
-        })
-        .slice(0, parseInt(this.perPage));
+      return [...this.tableActivities].sort((a, b) => {
+        if (sortKey === "start_date_local") return order * (new Date(b[sortKey]) - new Date(a[sortKey]));
+        if (sortKey === "pace") return order * (b.moving_time / 60 / (b.distance / 1000) - a.moving_time / 60 / (a.distance / 1000));
+        return order * (b[sortKey] - a[sortKey]);
+      });
     },
     statsSourceActivities() {
       if (this.combine) return [...this.activities];
@@ -157,8 +155,8 @@ export default {
 
         if (this.endDate) params.append("before", this.endDate);
 
-        // Fetch enough to cover goals when goal start is set
-        params.append("per_page", this.goalStartDate ? "200" : this.perPage);
+        // Fetch extra so client-side pagination has data to page through
+        params.append("per_page", this.goalStartDate ? "200" : String(Math.max(50, parseInt(this.perPage))));
 
         // When goal start is set, always fetch all types (filtering is client-side)
         if (!this.combine && !this.goalStartDate) params.append("type", this.activeTab === "runs" ? "Run" : "Walk");
@@ -200,9 +198,6 @@ export default {
     },
   },
   watch: {
-    perPage() {
-      this.debouncedFetch();
-    },
     startDate() {
       if (this.startDate && this.endDate) this.debouncedFetch();
     },
