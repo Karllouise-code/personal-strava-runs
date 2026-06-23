@@ -155,6 +155,7 @@ app.get("/auth/strava/callback", async (req, res) => {
 });
 
 app.get("/api/auth/me", (req, res) => {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
   if (req.session && req.session.athlete) {
     return res.json({
       loggedIn: true,
