@@ -212,12 +212,31 @@ export default {
     },
     async checkAuth() {
       try {
+        const params = new URLSearchParams(window.location.search);
+        const authParam = params.get("auth");
+        if (authParam) {
+          const athlete = JSON.parse(atob(authParam));
+          this.authUser = athlete;
+          sessionStorage.setItem("stravaAthlete", JSON.stringify(athlete));
+          window.history.replaceState({}, "", window.location.pathname);
+          this.authLoading = false;
+          return;
+        }
+
+        const stored = sessionStorage.getItem("stravaAthlete");
+        if (stored) {
+          this.authUser = JSON.parse(stored);
+          this.authLoading = false;
+          return;
+        }
+
         const opts = { method: "GET" };
         if (import.meta.env.PROD) opts.credentials = "include";
         const res = await fetch(this.apiUrl("/api/auth/me"), opts);
         const data = await res.json();
         if (data.loggedIn) {
           this.authUser = data.athlete;
+          sessionStorage.setItem("stravaAthlete", JSON.stringify(data.athlete));
         } else {
           this.hasEnvTokens = data.hasEnvTokens;
         }
@@ -228,6 +247,8 @@ export default {
       }
     },
     async logout() {
+      this.authUser = null;
+      sessionStorage.removeItem("stravaAthlete");
       try {
         const opts = { method: "POST", headers: { "Content-Type": "application/json" } };
         if (import.meta.env.PROD) opts.credentials = "include";
@@ -235,7 +256,6 @@ export default {
       } catch (e) {
         console.error("Logout failed:", e.message);
       }
-      this.authUser = null;
     },
     scrollToSection(sectionId) {
       console.log("Scrolling to section:", sectionId);

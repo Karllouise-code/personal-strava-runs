@@ -142,12 +142,14 @@ app.get("/auth/strava/callback", async (req, res) => {
     });
 
     const athlete = response.data.athlete;
+    const athleteData = { id: athlete.id, firstname: athlete.firstname, lastname: athlete.lastname, avatar: athlete.profile_medium };
     req.session.accessToken = response.data.access_token;
     req.session.refreshToken = response.data.refresh_token;
-    req.session.athlete = { id: athlete.id, firstname: athlete.firstname, lastname: athlete.lastname, avatar: athlete.profile_medium };
+    req.session.athlete = athleteData;
     req.session.tokenExpiresAt = response.data.expires_at;
 
-    res.redirect(FRONTEND_URL);
+    const encoded = Buffer.from(JSON.stringify(athleteData)).toString("base64");
+    res.redirect(`${FRONTEND_URL}?auth=${encoded}`);
   } catch (error) {
     console.error("Strava OAuth callback error:", error.response?.data || error.message);
     res.status(500).send("Authentication failed");
