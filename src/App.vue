@@ -8,7 +8,7 @@
     </header>
 
     <main class="max-w-5xl mx-auto px-6 py-8 space-y-10">
-      <StatsSection :activities="statsActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" />
+      <StatsSection :activities="statsSourceActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" />
       <OverallGoalSection :goal-start-date="goalStartDate" :goal-kilometers="goalKilometers" :goal-distance="goalDistance" :goal-activities="goalActivities" :combine="combine" @update:goal-start-date="goalStartDate = $event" @update:goal-kilometers="goalKilometers = $event" />
       <WeeklyGoalSection :weekly-goal-kilometers="weeklyGoalKilometers" :weekly-goal-distance="weeklyGoalDistance" :weekly-goal-activities="weeklyGoalActivities" :weekly-start-date="weeklyStartDate" :combine="combine" @update:weekly-goal-kilometers="weeklyGoalKilometers = $event" />
       <ActivitiesSection :activities="sortedTableActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" :per-page="perPage" :search-name="searchName" :start-date="startDate" :end-date="endDate" :sort-key="sortKey" :sort-order="sortOrder" @update:combine="combine = $event" @update:active-tab="activeTab = $event" @update:search-name="searchName = $event" @update:start-date="startDate = $event" @update:end-date="endDate = $event" @update:per-page="perPage = $event" @sort="sortBy" @set-this-month="setThisMonth" />
@@ -85,12 +85,12 @@ export default {
         })
         .slice(0, parseInt(this.perPage));
     },
-    statsActivities() {
-      if (this.combine) return this.baseFilteredActivities;
-      return this.baseFilteredActivities.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
+    statsSourceActivities() {
+      if (this.combine) return [...this.activities];
+      return this.activities.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
     },
     goalActivities() {
-      let filtered = this.baseFilteredActivities;
+      let filtered = [...this.activities];
       if (this.combine) {
         if (this.goalStartDate) {
           filtered = filtered.filter((activity) => new Date(activity.start_date_local) >= new Date(this.goalStartDate));
@@ -123,7 +123,7 @@ export default {
       endOfWeek.setDate(startOfWeek.getDate() + 6);
       endOfWeek.setHours(23, 59, 59, 999);
 
-      let filtered = this.baseFilteredActivities.filter((activity) => new Date(activity.start_date_local) >= startOfWeek && new Date(activity.start_date_local) <= endOfWeek);
+      let filtered = this.activities.filter((activity) => new Date(activity.start_date_local) >= startOfWeek && new Date(activity.start_date_local) <= endOfWeek);
       if (!this.combine) {
         filtered = filtered.filter((activity) => activity.type === (this.activeTab === "runs" ? "Run" : "Walk"));
       }
