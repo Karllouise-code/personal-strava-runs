@@ -141,9 +141,10 @@ app.get("/auth/strava/callback", async (req, res) => {
       grant_type: "authorization_code",
     });
 
+    const athlete = response.data.athlete;
     req.session.accessToken = response.data.access_token;
     req.session.refreshToken = response.data.refresh_token;
-    req.session.athlete = response.data.athlete;
+    req.session.athlete = { id: athlete.id, firstname: athlete.firstname, lastname: athlete.lastname, avatar: athlete.profile_medium };
     req.session.tokenExpiresAt = response.data.expires_at;
 
     res.redirect(FRONTEND_URL);
