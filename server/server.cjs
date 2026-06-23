@@ -39,8 +39,10 @@ async function refreshAccessToken() {
   }
 }
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 app.use(cors({
-  origin: 'https://karlritostrava.netlify.app' // Uncomment to restrict CORS
+  origin: ['https://karlritostrava.netlify.app', 'http://localhost:5173']
 }));
 
 app.get("/", (req, res) => {
@@ -93,6 +95,7 @@ app.get("/api/activities", async (req, res) => {
       );
       allActivities = allActivities.concat(fetchedActivities);
       page++;
+      if (fetchedActivities.length > 0 && allActivities.length < perPage) await sleep(250);
     } while (fetchedActivities.length > 0 && allActivities.length < perPage);
 
     // Take only the requested number of activities
@@ -146,6 +149,7 @@ app.get("/api/activities", async (req, res) => {
           );
           allActivities = allActivities.concat(fetchedActivities);
           page++;
+          if (fetchedActivities.length > 0 && allActivities.length < perPage) await sleep(250);
         } while (fetchedActivities.length > 0 && allActivities.length < perPage);
 
         const activities = allActivities.slice(0, perPage);
@@ -168,6 +172,23 @@ app.get("/api/activities", async (req, res) => {
         console.error("Error after refreshing token:", retryError.message);
         res.status(500).json({ error: "Failed to fetch activities" });
       }
+    } else if (error.response && error.response.status === 429) {
+      console.warn("Strava rate limited (429), serving stale cache");
+      try {
+        let fallbackQuery = db.collection("activities");
+        const { after, before, type } = req.query;
+        if (type === 'Run' || type === 'Walk') fallbackQuery = fallbackQuery.where("type", "==", type);
+        if (after) fallbackQuery = fallbackQuery.where("start_date_local", ">=", new Date(after).toISOString());
+        if (before) fallbackQuery = fallbackQuery.where("start_date_local", "<=", new Date(before).toISOString());
+        const snapshot = await fallbackQuery.orderBy("start_date_local", "desc").limit(200).get();
+        const cached = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        if (cached.length > 0) {
+          return res.json(cached);
+        }
+      } catch (cacheErr) {
+        console.error("Cache fallback also failed:", cacheErr.message);
+      }
+      res.status(429).json({ error: "Rate limited. Try again later." });
     } else {
       console.error("Error fetching Strava data:", error.message);
       res.status(500).json({ error: "Failed to fetch activities" });

@@ -55,8 +55,5 @@ export default {
 <style scoped>
 div {
   height: 300px;
-  background-color: #1f2937; /* Tailwind gray-800 */
-  border-radius: 0.75rem;
-  padding: 1rem;
 }
 </style>
