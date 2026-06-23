@@ -8,7 +8,7 @@ const app = express();
 const port = 3000;
 
 // Initialize Firebase Admin with explicit service account path
-const serviceAccount = require("./personal-strava-runs-firebase-adminsdk-fbsvc-e577d85c90.json");
+const serviceAccount = require("./personal-strava-runs-firebase-adminsdk-fbsvc-c46d021586.json");
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
@@ -18,7 +18,7 @@ const db = admin.firestore();
 const CLIENT_ID = process.env.STRAVA_CLIENT_ID;
 const CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET;
 let STRAVA_ACCESS_TOKEN = process.env.STRAVA_ACCESS_TOKEN;
-const STRAVA_REFRESH_TOKEN = process.env.STRAVA_REFRESH_TOKEN;
+let STRAVA_REFRESH_TOKEN = process.env.STRAVA_REFRESH_TOKEN;
 
 // Refresh token function
 async function refreshAccessToken() {
@@ -30,6 +30,7 @@ async function refreshAccessToken() {
       grant_type: "refresh_token",
     });
     STRAVA_ACCESS_TOKEN = response.data.access_token;
+    if (response.data.refresh_token) STRAVA_REFRESH_TOKEN = response.data.refresh_token;
     console.log("Access token refreshed:", STRAVA_ACCESS_TOKEN.slice(0, 10) + "...");
     return STRAVA_ACCESS_TOKEN;
   } catch (error) {
