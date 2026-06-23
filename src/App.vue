@@ -3,7 +3,19 @@
     <header class="sticky top-0 z-20 bg-[#0a0a0b]/80 backdrop-blur-2xl border-b border-white/[0.06]">
       <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
         <h1 class="text-lg font-semibold tracking-tight">My Running Journey</h1>
-        <span class="text-xs text-[#86868b]">Powered by Strava</span>
+        <div class="flex items-center gap-3">
+          <template v-if="authLoading">
+            <span class="text-xs text-[#86868b]">Loading...</span>
+          </template>
+          <template v-else-if="authUser">
+            <span class="text-xs text-[#86868b]">{{ authUser.firstname }} {{ authUser.lastname }}</span>
+            <button @click="logout" class="text-xs text-[#fc4c02] hover:text-[#e04302] transition-colors">Logout</button>
+          </template>
+          <template v-else>
+            <a :href="authLoginUrl" class="text-xs text-[#fc4c02] hover:text-[#e04302] font-medium transition-colors">Login with Strava</a>
+            <span class="text-xs text-[#86868b]" v-if="hasEnvTokens">(env token active)</span>
+          </template>
+        </div>
       </div>
     </header>
 
@@ -54,6 +66,9 @@ export default {
       weeklyGoalKilometers: Number(localStorage.getItem("weeklyGoalKilometers")) || 38,
       isLoading: false,
       fetchTimeout: null,
+      authUser: null,
+      authLoading: true,
+      hasEnvTokens: false,
     };
   },
   computed: {
@@ -82,6 +97,14 @@ export default {
         if (sortKey === "pace") return order * (b.moving_time / 60 / (b.distance / 1000) - a.moving_time / 60 / (a.distance / 1000));
         return order * (b[sortKey] - a[sortKey]);
       });
+    },
+    apiBase() {
+      const url = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      return url.replace(/\/api\/activities\/?$/, "").replace(/\/api\/?$/, "");
+    },
+    authLoginUrl() {
+      if (import.meta.env.DEV) return "/auth/strava/login";
+      return `${this.apiBase}/auth/strava/login`;
     },
     statsSourceActivities() {
       if (this.combine) return [...this.activities];
@@ -138,13 +161,16 @@ export default {
       this.sortOrder = this.sortKey === key ? -this.sortOrder : -1;
       this.sortKey = key === "pace" ? "pace" : key;
     },
+    apiUrl(path) {
+      if (import.meta.env.DEV) return path;
+      return `${this.apiBase}${path}`;
+    },
     async fetchActivities() {
       this.isLoading = true;
       try {
-        console.log("Fetching activities from", import.meta.env.VITE_API_URL);
+        console.log("Fetching activities from", this.apiUrl("/api/activities"));
         const params = new URLSearchParams();
 
-        // Fetch from the earliest relevant date (table filter or goal start)
         const fromDates = [];
         if (this.startDate) fromDates.push(new Date(this.startDate));
         if (this.goalStartDate) fromDates.push(new Date(this.goalStartDate));
@@ -155,15 +181,15 @@ export default {
 
         if (this.endDate) params.append("before", this.endDate);
 
-        // Fetch extra so client-side pagination has data to page through
         params.append("per_page", this.goalStartDate ? "200" : String(Math.max(50, parseInt(this.perPage))));
 
-        // When goal start is set, always fetch all types (filtering is client-side)
         if (!this.combine && !this.goalStartDate) params.append("type", this.activeTab === "runs" ? "Run" : "Walk");
-        const response = await fetch(`${import.meta.env.VITE_API_URL}?${params.toString()}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
+
+        const opts = { method: "GET" };
+        if (import.meta.env.PROD) opts.credentials = "include";
+
+        const response = await fetch(`${this.apiUrl("/api/activities")}?${params.toString()}`, opts);
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
         console.log("Fetched activities:", data);
         this.activities = data;
@@ -186,6 +212,33 @@ export default {
       this.startDate = firstDay.toISOString().split("T")[0];
       this.endDate = lastDay.toISOString().split("T")[0];
       this.fetchActivities();
+    },
+    async checkAuth() {
+      try {
+        const opts = { method: "GET" };
+        if (import.meta.env.PROD) opts.credentials = "include";
+        const res = await fetch(this.apiUrl("/api/auth/me"), opts);
+        const data = await res.json();
+        if (data.loggedIn) {
+          this.authUser = data.athlete;
+        } else {
+          this.hasEnvTokens = data.hasEnvTokens;
+        }
+      } catch (e) {
+        console.error("Auth check failed:", e.message);
+      } finally {
+        this.authLoading = false;
+      }
+    },
+    async logout() {
+      try {
+        const opts = { method: "POST", headers: { "Content-Type": "application/json" } };
+        if (import.meta.env.PROD) opts.credentials = "include";
+        await fetch(this.apiUrl("/api/auth/logout"), opts);
+      } catch (e) {
+        console.error("Logout failed:", e.message);
+      }
+      this.authUser = null;
     },
     scrollToSection(sectionId) {
       console.log("Scrolling to section:", sectionId);
@@ -226,7 +279,7 @@ export default {
     },
   },
   mounted() {
-    this.setThisMonth();
+    this.checkAuth().then(() => this.setThisMonth());
   },
 };
 </script>
