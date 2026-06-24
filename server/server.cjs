@@ -181,8 +181,7 @@ app.get("/api/auth/me", (req, res) => {
       },
     });
   }
-  const hasEnvTokens = !!(STRAVA_ACCESS_TOKEN && STRAVA_REFRESH_TOKEN);
-  res.json({ loggedIn: false, hasEnvTokens });
+  res.json({ loggedIn: false });
 });
 
 app.post("/api/auth/logout", (req, res) => {

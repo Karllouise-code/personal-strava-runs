@@ -13,7 +13,7 @@
           </template>
           <template v-else>
             <a :href="authLoginUrl" class="text-xs text-[#fc4c02] hover:text-[#e04302] font-medium transition-colors">Login with Strava</a>
-            <span class="text-xs text-[#86868b]" v-if="hasEnvTokens">(env token active)</span>
+
           </template>
         </div>
       </div>
@@ -68,7 +68,6 @@ export default {
       fetchTimeout: null,
       authUser: null,
       authLoading: true,
-      hasEnvTokens: false,
     };
   },
   computed: {
@@ -254,8 +253,6 @@ export default {
         if (data.loggedIn) {
           this.authUser = data.athlete;
           sessionStorage.setItem("stravaAthlete", JSON.stringify(data.athlete));
-        } else {
-          this.hasEnvTokens = data.hasEnvTokens;
         }
       } catch (e) {
         console.error("Auth check failed:", e.message);
