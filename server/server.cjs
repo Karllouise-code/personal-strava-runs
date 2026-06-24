@@ -227,21 +227,25 @@ app.get("/api/activities", async (req, res) => {
     console.log("Fetching from Strava");
     const activities = await fetchStravaActivities(tokens.accessToken, perPage, afterTimestamp, beforeTimestamp, activityType);
 
-    // Save to Firestore
-    const batch = db.batch();
-    activities.forEach((activity) => {
-      const activityRef = db.collection("activities").doc(activity.id.toString());
-      batch.set(activityRef, {
-        ...activity,
-        distance: Number(activity.distance),
-        moving_time: Number(activity.moving_time),
-        start_date_local: new Date(activity.start_date_local).toISOString(),
-        type: activity.type,
+    // Save to Firestore (best-effort — never block the response)
+    try {
+      const batch = db.batch();
+      activities.forEach((activity) => {
+        const activityRef = db.collection("activities").doc(activity.id.toString());
+        batch.set(activityRef, {
+          ...activity,
+          distance: Number(activity.distance),
+          moving_time: Number(activity.moving_time),
+          start_date_local: new Date(activity.start_date_local).toISOString(),
+          type: activity.type,
+        });
       });
-    });
-    batch.set(db.collection("metadata").doc("sync"), { lastSync: Date.now() });
-    await batch.commit();
-    console.log("Saved to Firestore:", activities.length, "activities");
+      batch.set(db.collection("metadata").doc("sync"), { lastSync: Date.now() });
+      await batch.commit();
+      console.log("Saved to Firestore:", activities.length, "activities");
+    } catch (writeErr) {
+      console.warn("Firestore write failed (serving Strava data anyway):", writeErr.message);
+    }
 
     res.json(activities);
   } catch (error) {
@@ -258,19 +262,23 @@ app.get("/api/activities", async (req, res) => {
 
         const activities = await fetchStravaActivities(newAccess, perPage, afterTimestamp, beforeTimestamp, activityType);
 
-        const batch = db.batch();
-        activities.forEach((activity) => {
-          const activityRef = db.collection("activities").doc(activity.id.toString());
-          batch.set(activityRef, {
-            ...activity,
-            distance: Number(activity.distance),
-            moving_time: Number(activity.moving_time),
-            start_date_local: new Date(activity.start_date_local).toISOString(),
-            type: activity.type,
+        try {
+          const batch = db.batch();
+          activities.forEach((activity) => {
+            const activityRef = db.collection("activities").doc(activity.id.toString());
+            batch.set(activityRef, {
+              ...activity,
+              distance: Number(activity.distance),
+              moving_time: Number(activity.moving_time),
+              start_date_local: new Date(activity.start_date_local).toISOString(),
+              type: activity.type,
+            });
           });
-        });
-        batch.set(db.collection("metadata").doc("sync"), { lastSync: Date.now() });
-        await batch.commit();
+          batch.set(db.collection("metadata").doc("sync"), { lastSync: Date.now() });
+          await batch.commit();
+        } catch (writeErr) {
+          console.warn("Firestore write failed (serving Strava data anyway):", writeErr.message);
+        }
         res.json(activities);
       } catch (retryError) {
         console.error("Error after refreshing token:", retryError.message);
