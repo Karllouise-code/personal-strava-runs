@@ -208,17 +208,31 @@ app.get("/api/activities", async (req, res) => {
     const beforeTimestamp = before ? Math.floor(new Date(before).getTime() / 1000) : Math.floor(Date.now() / 1000);
     const activityType = type === "Run" || type === "Walk" ? type : null;
 
-    // Check Firestore cache first
-    let query = db.collection("activities");
-    if (activityType) query = query.where("type", "==", activityType);
-    if (after) query = query.where("start_date_local", ">=", new Date(after).toISOString());
-    if (before) query = query.where("start_date_local", "<=", new Date(before).toISOString());
-    const activitiesSnapshot = await query.orderBy("start_date_local", "desc").limit(perPage).get();
-    const cachedActivities = activitiesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    const lastSync = (await db.collection("metadata").doc("sync").get()).data()?.lastSync || 0;
+    // Check Firestore cache first (with short timeout — skip if quota exhausted)
+    let cachedActivities, lastSync, cacheHit;
+    try {
+      cacheHit = await Promise.race([
+        (async () => {
+          let q = db.collection("activities");
+          if (activityType) q = q.where("type", "==", activityType);
+          if (after) q = q.where("start_date_local", ">=", new Date(after).toISOString());
+          if (before) q = q.where("start_date_local", "<=", new Date(before).toISOString());
+          const snapshot = await q.orderBy("start_date_local", "desc").limit(perPage).get();
+          const acts = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          const sync = (await db.collection("metadata").doc("sync").get()).data()?.lastSync || 0;
+          return { activities: acts, lastSync: sync };
+        })(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Firestore cache read timed out")), 3000)),
+      ]);
+      cachedActivities = cacheHit.activities;
+      lastSync = cacheHit.lastSync;
+    } catch (cacheErr) {
+      console.warn("Firestore cache unavailable, fetching from Strava:", cacheErr.message);
+    }
+
     const oneDay = 24 * 60 * 60 * 1000;
 
-    if (cachedActivities.length >= perPage && Date.now() - lastSync < oneDay) {
+    if (cachedActivities && cachedActivities.length >= perPage && Date.now() - lastSync < oneDay) {
       console.log("Serving cached activities:", cachedActivities.length);
       return res.json(cachedActivities);
     }
@@ -287,14 +301,19 @@ app.get("/api/activities", async (req, res) => {
     } else if (error.response && error.response.status === 429) {
       console.warn("Strava rate limited (429), serving stale cache");
       try {
-        let fallbackQuery = db.collection("activities");
-        const { after, before, type } = req.query;
-        if (type === "Run" || type === "Walk") fallbackQuery = fallbackQuery.where("type", "==", type);
-        if (after) fallbackQuery = fallbackQuery.where("start_date_local", ">=", new Date(after).toISOString());
-        if (before) fallbackQuery = fallbackQuery.where("start_date_local", "<=", new Date(before).toISOString());
-        const snapshot = await fallbackQuery.orderBy("start_date_local", "desc").limit(200).get();
-        const cached = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        if (cached.length > 0) return res.json(cached);
+        const fallback = await Promise.race([
+          (async () => {
+            let q = db.collection("activities");
+            const { after, before, type } = req.query;
+            if (type === "Run" || type === "Walk") q = q.where("type", "==", type);
+            if (after) q = q.where("start_date_local", ">=", new Date(after).toISOString());
+            if (before) q = q.where("start_date_local", "<=", new Date(before).toISOString());
+            const snapshot = await q.orderBy("start_date_local", "desc").limit(200).get();
+            return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          })(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Firestore fallback timed out")), 3000)),
+        ]);
+        if (fallback.length > 0) return res.json(fallback);
       } catch (cacheErr) {
         console.error("Cache fallback also failed:", cacheErr.message);
       }
