@@ -1,34 +1,28 @@
 <template>
   <section id="recent-activities">
-    <div class="flex items-center justify-between mb-5">
-      <h2 class="text-xl font-semibold tracking-tight">Recent Activities</h2>
-      <label class="flex items-center gap-2.5 text-xs text-[#86868b] cursor-pointer select-none group">
-        <span class="relative w-[18px] h-[18px] flex items-center justify-center">
-          <input type="checkbox" :checked="combine" @change="$emit('update:combine', $event.target.checked)" class="appearance-none w-[18px] h-[18px] rounded-md border border-white/[0.15] bg-white/[0.04] checked:bg-[#fc4c02] checked:border-[#fc4c02] focus:outline-none focus:ring-2 focus:ring-[#fc4c02]/30 transition-all duration-200 cursor-pointer" />
-          <svg v-if="combine" class="absolute w-3 h-3 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-        </span>
-        <span class="group-hover:text-[#f5f5f7] transition-colors duration-200">Combine runs &amp; walks</span>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold tracking-tight">Recent Activities</h2>
+      <label class="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer select-none min-h-[44px] px-1">
+        <input type="checkbox" :checked="combine" @change="$emit('update:combine', $event.target.checked)" class="appearance-none w-4 h-4 rounded border border-zinc-600 bg-transparent checked:bg-accent checked:border-accent focus:outline-none transition-colors cursor-pointer" />
+        <span>Combine runs &amp; walks</span>
       </label>
     </div>
 
-    <div class="bg-white/[0.03] backdrop-blur-2xl rounded-2xl border border-white/[0.06] shadow-2xl">
-      <div class="flex border-b border-white/[0.06]">
-        <button :class="['flex-1 py-3.5 text-center text-sm font-medium tracking-wide transition-all duration-200 relative', activeTab === 'runs' ? 'text-[#fc4c02]' : 'text-[#86868b] hover:text-[#f5f5f7]']" @click="$emit('update:activeTab', 'runs')">
+    <div class="bg-card border border-zinc-800 rounded-xl overflow-hidden">
+      <div class="flex border-b border-zinc-800">
+        <button :class="['flex-1 py-3 text-center text-sm font-medium transition-colors relative min-h-[44px]', activeTab === 'runs' ? 'text-accent' : 'text-zinc-400 hover:text-zinc-200']" @click="$emit('update:activeTab', 'runs')">
           Runs
-          <span class="ml-1.5 opacity-60">🏃</span>
-          <span v-if="activeTab === 'runs'" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[#fc4c02] rounded-full"></span>
+          <span v-if="activeTab === 'runs'" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-accent rounded-full"></span>
         </button>
-        <button :class="['flex-1 py-3.5 text-center text-sm font-medium tracking-wide transition-all duration-200 relative', activeTab === 'walks' ? 'text-[#fc4c02]' : 'text-[#86868b] hover:text-[#f5f5f7]']" @click="$emit('update:activeTab', 'walks')">
+        <button :class="['flex-1 py-3 text-center text-sm font-medium transition-colors relative min-h-[44px]', activeTab === 'walks' ? 'text-accent' : 'text-zinc-400 hover:text-zinc-200']" @click="$emit('update:activeTab', 'walks')">
           Walks
-          <span class="ml-1.5 opacity-60">🚶</span>
-          <span v-if="activeTab === 'walks'" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[#fc4c02] rounded-full"></span>
+          <span v-if="activeTab === 'walks'" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-accent rounded-full"></span>
         </button>
       </div>
 
-      <div class="p-5 flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
+      <div class="p-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
         <div class="relative flex-1 min-w-[160px]">
-          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          <input :value="searchName" @input="$emit('update:searchName', $event.target.value)" placeholder="Search by name..." class="w-full bg-white/[0.04] border border-white/[0.07] text-[#f5f5f7] placeholder-[#5a5a5e] pl-9 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/60 focus:bg-white/[0.06] focus:shadow-[0_0_12px_-4px_#fc4c02] transition-all duration-200" />
+          <input :value="searchName" @input="$emit('update:searchName', $event.target.value)" placeholder="Search by name..." class="w-full bg-transparent border-b border-zinc-700 text-[#f5f5f7] placeholder-zinc-600 pb-2 pt-1 text-sm focus:outline-none focus:border-accent transition-colors" />
         </div>
         <div class="relative dp-wrap">
           <VueDatePicker
@@ -44,7 +38,7 @@
             :time-config="{ enableTimePicker: false }"
           />
         </div>
-        <span class="text-xs text-[#5a5a5e] font-medium hidden sm:inline -mx-1.5">—</span>
+        <span class="text-xs text-zinc-600 font-medium hidden sm:inline">—</span>
         <div class="relative dp-wrap">
           <VueDatePicker
             :model-value="toDate(endDate)"
@@ -59,59 +53,55 @@
             :time-config="{ enableTimePicker: false }"
           />
         </div>
-        <button @click="$emit('setThisMonth')" class="bg-[#fc4c02] text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-[#e04302] hover:shadow-[0_0_16px_-4px_#fc4c02] active:scale-[0.97] transition-all duration-200 whitespace-nowrap">This Month</button>
+        <button @click="$emit('setThisMonth')" class="text-accent hover:text-accent/80 text-sm font-medium min-h-[44px] px-1 transition-colors">This Month</button>
         <div class="relative w-full sm:w-auto sm:ml-auto">
-          <select :value="perPage" @change="$emit('update:perPage', $event.target.value)" class="w-full sm:w-auto appearance-none bg-white/[0.04] border border-white/[0.07] text-[#f5f5f7] pl-4 pr-10 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/60 focus:bg-white/[0.06] focus:shadow-[0_0_12px_-4px_#fc4c02] transition-all duration-200 cursor-pointer">
-            <option value="10" class="bg-[#1c1c1e]">10 per page</option>
-            <option value="20" class="bg-[#1c1c1e]">20 per page</option>
-            <option value="50" class="bg-[#1c1c1e]">50 per page</option>
+          <select :value="perPage" @change="$emit('update:perPage', $event.target.value)" class="w-full sm:w-auto appearance-none bg-transparent border-b border-zinc-700 text-[#f5f5f7] pb-2 pt-1 pr-6 text-sm focus:outline-none focus:border-accent transition-colors cursor-pointer">
+            <option value="10" class="bg-card">10 per page</option>
+            <option value="20" class="bg-card">20 per page</option>
+            <option value="50" class="bg-card">50 per page</option>
           </select>
-          <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a5e] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
         </div>
       </div>
 
       <template v-if="isLoading">
-        <div class="animate-pulse px-5 py-4 space-y-4">
+        <div class="animate-pulse px-4 py-4 space-y-4">
           <div v-for="i in 5" :key="i" class="flex gap-4 items-center">
-            <div class="h-4 w-4 bg-white/[0.06] rounded-full" />
-            <div class="h-4 w-40 bg-white/[0.06] rounded" />
-            <div class="h-4 w-16 bg-white/[0.06] rounded ml-auto" />
-            <div class="h-4 w-16 bg-white/[0.06] rounded ml-auto" />
+            <div class="h-4 w-4 bg-zinc-800 rounded-full" />
+            <div class="h-4 w-40 bg-zinc-800 rounded" />
+            <div class="h-4 w-16 bg-zinc-800 rounded ml-auto" />
+            <div class="h-4 w-16 bg-zinc-800 rounded" />
           </div>
         </div>
       </template>
-      <p v-else-if="!activities.length" class="px-5 pb-5 text-sm text-[#86868b]">No {{ combine ? "activities" : activeTab === "runs" ? "runs" : "walks" }} match your filters.</p>
-      <div v-else class="divide-y divide-white/[0.04]">
-        <div v-for="activity in paginatedActivities" :key="activity.id" class="flex items-center gap-3 px-5 py-4 hover:bg-white/[0.02] transition-colors" :class="isPR(activity) ? 'bg-[#fc4c02]/10' : ''">
-          <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" :class="activity.type === 'Run' ? 'bg-[#fc4c02]' : 'bg-teal-400'"></span>
+      <p v-else-if="!activities.length" class="px-4 pb-4 text-sm text-zinc-400">No {{ combine ? "activities" : activeTab === "runs" ? "runs" : "walks" }} match your filters.</p>
+      <div v-else class="divide-y divide-zinc-800/50">
+        <div v-for="activity in paginatedActivities" :key="activity.id" class="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/30 transition-colors min-h-[52px]">
+          <span class="w-2 h-2 rounded-full flex-shrink-0" :class="activity.type === 'Run' ? 'bg-accent' : 'bg-zinc-500'"></span>
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium truncate">{{ activity.name }}</p>
-            <p class="text-xs text-[#86868b]">{{ formatDate(activity.start_date_local) }}</p>
+            <p class="text-sm font-medium text-zinc-200 truncate">{{ activity.name }}</p>
+            <p class="text-xs text-zinc-400">{{ formatDate(activity.start_date_local) }}</p>
           </div>
-          <div class="text-right flex-shrink-0 min-w-[48px]" v-if="activity.average_heartrate">
-            <p class="text-sm font-semibold">{{ Math.round(activity.average_heartrate) }}</p>
-            <p class="text-xs text-[#86868b]">bpm</p>
+          <div class="text-right flex-shrink-0" v-if="activity.average_heartrate">
+            <p class="text-sm font-semibold text-zinc-200">{{ Math.round(activity.average_heartrate) }}</p>
+            <p class="text-xs text-zinc-400">bpm</p>
           </div>
-          <div class="text-right flex-shrink-0">
-            <p class="text-sm font-semibold">{{ (activity.distance / 1000).toFixed(1) }} km</p>
-            <p class="text-xs text-[#86868b]">{{ (activity.moving_time / 60 / (activity.distance / 1000)).toFixed(2) }} min/km</p>
+          <div class="text-right flex-shrink-0 min-w-[56px]">
+            <p class="text-sm font-semibold text-zinc-200">{{ (activity.distance / 1000).toFixed(1) }} km</p>
+            <p class="text-xs text-zinc-400">{{ (activity.moving_time / 60 / (activity.distance / 1000)).toFixed(2) }} min/km</p>
           </div>
         </div>
-        <div class="flex items-center justify-between px-5 py-3 bg-white/[0.02] border-t border-white/[0.04]">
+        <div class="flex items-center justify-between px-4 py-3 border-t border-zinc-800 min-h-[44px]">
           <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-[#86868b]"></span>
-            <p class="text-xs font-medium uppercase tracking-wider text-[#86868b]">Total</p>
-            <p class="text-sm font-semibold text-white ml-2">{{ totalKm }}</p>
+            <span class="text-xs font-medium text-zinc-400">Total</span>
+            <span class="text-sm font-semibold text-zinc-200">{{ totalKm }}</span>
           </div>
           <div class="flex items-center gap-2">
-            <button :disabled="page <= 1" class="text-xs text-[#86868b] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed px-2.5 py-1.5 rounded-lg hover:bg-white/[0.05] transition-all duration-200" @click="prevPage">
-              <svg class="w-3.5 h-3.5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-              <span class="ml-1">Prev</span>
+            <button :disabled="page <= 1" class="text-xs text-zinc-400 hover:text-zinc-200 disabled:text-zinc-700 disabled:cursor-not-allowed min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors" @click="prevPage">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
             </button>
-            <span class="text-xs text-[#5a5a5e] font-medium tabular-nums px-2">Page {{ page }} / {{ totalPages }}</span>
-            <button :disabled="page >= totalPages" class="text-xs text-[#86868b] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed px-2.5 py-1.5 rounded-lg hover:bg-white/[0.05] transition-all duration-200" @click="nextPage">
-              <span class="mr-1">Next</span>
-              <svg class="w-3.5 h-3.5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            <span class="text-xs text-zinc-600 font-medium tabular-nums">{{ page }} / {{ totalPages }}</span>
+            <button :disabled="page >= totalPages" class="text-xs text-zinc-400 hover:text-zinc-200 disabled:text-zinc-700 disabled:cursor-not-allowed min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors" @click="nextPage">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
             </button>
           </div>
         </div>
@@ -178,43 +168,38 @@ export default {
     formatDate(date) {
       return new Date(date).toLocaleDateString();
     },
-    isPR(activity) {
-      const type = this.combine ? null : this.activeTab === "runs" ? "Run" : "Walk";
-      const relevant = type ? this.activities.filter((a) => a.type === type) : this.activities;
-      const pace = activity.moving_time / 60 / (activity.distance / 1000);
-      const paces = relevant.map((a) => a.moving_time / 60 / (a.distance / 1000)).filter((p) => !isNaN(p));
-      return pace === Math.min(...paces) && !isNaN(pace);
-    },
   },
 };
 </script>
 
 <style>
 .dp-wrap .dp-input {
-  background: rgba(255,255,255,0.04) !important;
-  border: 1px solid rgba(255,255,255,0.07) !important;
+  background: transparent !important;
+  border-bottom: 1px solid #3f3f46 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-radius: 0 !important;
   color: #f5f5f7 !important;
-  padding: 10px 16px !important;
-  border-radius: 12px !important;
+  padding: 8px 12px 8px 0 !important;
   font-size: 0.875rem !important;
   line-height: 1.25rem !important;
-  min-height: 40px;
+  min-height: 38px;
   width: 100%;
-  transition: all 0.2s ease !important;
+  transition: border-color 0.2s ease !important;
 }
 .dp-wrap .dp-input:focus {
-  border-color: rgba(252, 76, 2, 0.6) !important;
-  background: rgba(255,255,255,0.06) !important;
-  box-shadow: 0 0 12px -4px #fc4c02 !important;
+  border-color: #2dd4bf !important;
+  box-shadow: none !important;
   outline: none !important;
 }
 .dp-wrap .dp-input::placeholder {
-  color: #5a5a5e !important;
+  color: #52525b !important;
 }
 .dp-wrap .dp__input_icon {
-  color: #5a5a5e !important;
+  color: #52525b !important;
 }
 .dp-wrap .dp__input_icon_pad {
-  padding-left: 40px !important;
+  padding-left: 0 !important;
 }
 </style>

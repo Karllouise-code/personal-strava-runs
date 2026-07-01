@@ -1,5 +1,5 @@
 <template>
-  <div class="relative">
+  <div>
     <Line :data="chartData" :options="chartOptions" />
   </div>
 </template>
@@ -32,27 +32,19 @@ export default {
         datasets: [
           {
             data,
-            borderColor: "#00e5ff",
+            borderColor: "#2dd4bf",
             backgroundColor: (ctx) => {
               if (!ctx.chart.chartArea) return "transparent";
               const gradient = ctx.chart.ctx.createLinearGradient(0, ctx.chart.chartArea.top, 0, ctx.chart.chartArea.bottom);
-              gradient.addColorStop(0, "rgba(0, 229, 255, 0.25)");
-              gradient.addColorStop(1, "rgba(0, 229, 255, 0)");
+              gradient.addColorStop(0, "rgba(45, 212, 191, 0.12)");
+              gradient.addColorStop(1, "rgba(45, 212, 191, 0)");
               return gradient;
             },
             borderWidth: 2,
             pointRadius: 0,
-            pointHoverRadius: 4,
-            tension: 0.4,
+            pointHoverRadius: 5,
+            tension: 0.35,
             fill: true,
-          },
-          {
-            data,
-            borderColor: "rgba(0, 229, 255, 0.3)",
-            borderWidth: 6,
-            pointRadius: 0,
-            tension: 0.4,
-            fill: false,
           },
         ],
       };
@@ -61,7 +53,7 @@ export default {
       return {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { enabled: true } },
+        plugins: { legend: { display: false }, tooltip: { enabled: true, backgroundColor: "#1c1c1e", titleColor: "#f5f5f7", bodyColor: "#a1a1aa", borderColor: "#27272a", borderWidth: 1, padding: 10, cornerRadius: 8 } },
         scales: {
           x: { display: false, grid: { display: false } },
           y: { display: false, grid: { display: false }, beginAtZero: true },
@@ -75,6 +67,6 @@ export default {
 
 <style scoped>
 div {
-  height: 200px;
+  height: 260px;
 }
 </style>

@@ -1,13 +1,10 @@
 <template>
   <section id="overall-goals">
-    <h2 class="text-xl font-semibold tracking-tight mb-5">Overall Goal</h2>
-    <div class="bg-white/[0.03] backdrop-blur-2xl rounded-2xl border border-white/[0.06] p-6 shadow-2xl">
+    <h2 class="text-lg font-semibold tracking-tight mb-4">Overall Goal</h2>
+    <div class="bg-card border border-zinc-800 rounded-xl p-6">
       <div class="flex flex-col sm:flex-row gap-4 mb-5">
         <div class="flex flex-col gap-1.5 flex-1">
-          <label for="goalStartDate" class="text-xs font-medium uppercase tracking-wider text-[#86868b] flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-[#5a5a5e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            Start Date
-          </label>
+          <label for="goalStartDate" class="text-xs text-zinc-400">Start date</label>
           <div class="relative dp-wrap">
             <VueDatePicker
               :model-value="goalStartDate ? new Date(goalStartDate + 'T12:00:00') : null"
@@ -22,32 +19,29 @@
           </div>
         </div>
         <div class="flex flex-col gap-1.5 flex-1">
-          <label for="goalKilometers" class="text-xs font-medium uppercase tracking-wider text-[#86868b] flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-[#5a5a5e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-            Distance Goal
-          </label>
+          <label for="goalKilometers" class="text-xs text-zinc-400">Distance goal</label>
           <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#5a5a5e] pointer-events-none font-medium">km</span>
-            <input id="goalKilometers" type="number" :value="goalKilometers" @input="$emit('update:goalKilometers', Number($event.target.value))" min="1" step="1" placeholder="500" class="w-full bg-white/[0.04] border border-white/[0.07] text-[#f5f5f7] pl-11 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/60 focus:bg-white/[0.06] focus:shadow-[0_0_12px_-4px_#fc4c02] transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-600 pointer-events-none">km</span>
+            <input id="goalKilometers" type="number" :value="goalKilometers" @input="$emit('update:goalKilometers', Number($event.target.value))" min="1" step="1" placeholder="500" class="w-full bg-transparent border-b border-zinc-700 text-[#f5f5f7] pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-accent transition-colors" />
           </div>
         </div>
       </div>
       <div class="mb-3">
         <div class="flex justify-between text-sm mb-1.5">
-          <span class="text-[#f5f5f7] font-medium">{{ goalDistance }} / {{ goalKilometers }} km</span>
-          <span class="text-[#86868b]">{{ ((goalDistance / goalKilometers) * 100).toFixed(1) }}%</span>
+          <span class="text-zinc-300 font-medium">{{ goalDistance }} / {{ goalKilometers }} km</span>
+          <span class="text-zinc-400">{{ ((goalDistance / goalKilometers) * 100).toFixed(1) }}%</span>
         </div>
-        <div class="w-full bg-white/[0.06] rounded-full h-2">
-          <div :style="{ width: Math.min((goalDistance / goalKilometers) * 100, 100) + '%' }" class="bg-[#fc4c02] h-2 rounded-full transition-all"></div>
+        <div class="w-full bg-zinc-800 rounded-full h-1.5">
+          <div :style="{ width: Math.min((goalDistance / goalKilometers) * 100, 100) + '%' }" class="bg-accent h-1.5 rounded-full transition-all"></div>
         </div>
       </div>
-      <div v-if="combine" class="flex gap-4 text-xs text-[#86868b]">
-        <span>🏃‍♂️ Run: {{ runDistance }}</span>
-        <span>🚶‍♂️ Walk: {{ walkDistance }}</span>
+      <div v-if="combine" class="flex gap-4 text-xs text-zinc-400">
+        <span>Run: {{ runDistance }}</span>
+        <span>Walk: {{ walkDistance }}</span>
       </div>
-      <div v-if="projection" class="mt-3 pt-3 border-t border-white/[0.06] text-xs text-[#86868b] flex items-center gap-1.5">
-        <svg class="w-3.5 h-3.5 text-[#fc4c02]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        Consistent pace → goal by <span class="text-[#f5f5f7] font-medium">{{ projection }}</span>
+      <div v-if="projection" class="mt-3 pt-3 border-t border-zinc-800 text-xs text-zinc-400 flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Consistent pace &rarr; goal by <span class="text-zinc-300 font-medium">{{ projection }}</span>
       </div>
     </div>
   </section>
@@ -93,30 +87,32 @@ export default {
 
 <style>
 .dp-wrap .dp-input {
-  background: rgba(255,255,255,0.04) !important;
-  border: 1px solid rgba(255,255,255,0.07) !important;
+  background: transparent !important;
+  border-bottom: 1px solid #3f3f46 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-radius: 0 !important;
   color: #f5f5f7 !important;
-  padding: 10px 16px !important;
-  border-radius: 12px !important;
+  padding: 8px 12px 8px 0 !important;
   font-size: 0.875rem !important;
   line-height: 1.25rem !important;
-  min-height: 40px;
+  min-height: 38px;
   width: 100%;
-  transition: all 0.2s ease !important;
+  transition: border-color 0.2s ease !important;
 }
 .dp-wrap .dp-input:focus {
-  border-color: rgba(252, 76, 2, 0.6) !important;
-  background: rgba(255,255,255,0.06) !important;
-  box-shadow: 0 0 12px -4px #fc4c02 !important;
+  border-color: #2dd4bf !important;
+  box-shadow: none !important;
   outline: none !important;
 }
 .dp-wrap .dp-input::placeholder {
-  color: #5a5a5e !important;
+  color: #52525b !important;
 }
 .dp-wrap .dp__input_icon {
-  color: #5a5a5e !important;
+  color: #52525b !important;
 }
 .dp-wrap .dp__input_icon_pad {
-  padding-left: 40px !important;
+  padding-left: 0 !important;
 }
 </style>

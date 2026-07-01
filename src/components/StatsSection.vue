@@ -1,73 +1,60 @@
 <template>
   <section id="stats">
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-2 text-xs text-[#86868b] uppercase tracking-wider">
-        <span class="text-white font-semibold">Dashboard</span>
-        <span>/</span>
-        <span>Overview</span>
-      </div>
-      <span class="text-xs text-[#00e5ff] font-semibold uppercase tracking-wider">Live</span>
-    </div>
-
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-      <div class="relative bg-white/[0.03] backdrop-blur-2xl rounded-2xl border border-white/[0.06] p-4 shadow-2xl overflow-hidden">
-        <div class="absolute left-0 top-0 bottom-0 w-[3px] bg-cyan-400 rounded-l-2xl" />
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+      <div class="bg-card border border-zinc-800 rounded-xl p-4">
         <template v-if="isLoading">
-          <div class="animate-pulse space-y-2"><div class="h-3 w-16 bg-white/[0.08] rounded" /><div class="h-7 w-20 bg-white/[0.08] rounded" /><div class="h-3 w-10 bg-white/[0.08] rounded" /></div>
+          <div class="animate-pulse space-y-2"><div class="h-3 w-16 bg-zinc-800 rounded" /><div class="h-7 w-20 bg-zinc-800 rounded" /></div>
         </template>
         <template v-else>
-          <p class="text-xs text-[#86868b] uppercase tracking-wider">avg pace</p>
-          <p class="text-2xl font-bold tracking-tight mt-1 text-white">{{ formattedPace }}</p>
-          <p class="text-xs text-[#86868b]">/km</p>
+          <p class="text-sm text-zinc-400 mb-0.5">Avg pace</p>
+          <p class="text-2xl font-bold text-white">{{ formattedPace }}</p>
+          <p class="text-sm text-zinc-600">/km</p>
         </template>
       </div>
-      <div class="relative bg-white/[0.03] backdrop-blur-2xl rounded-2xl border border-white/[0.06] p-4 shadow-2xl overflow-hidden">
-        <div class="absolute left-0 top-0 bottom-0 w-[3px] bg-purple-500 rounded-l-2xl" />
+      <div class="bg-card border border-zinc-800 rounded-xl p-4">
         <template v-if="isLoading">
-          <div class="animate-pulse space-y-2"><div class="h-3 w-16 bg-white/[0.08] rounded" /><div class="h-7 w-20 bg-white/[0.08] rounded" /><div class="h-3 w-10 bg-white/[0.08] rounded" /></div>
+          <div class="animate-pulse space-y-2"><div class="h-3 w-16 bg-zinc-800 rounded" /><div class="h-7 w-20 bg-zinc-800 rounded" /></div>
         </template>
         <template v-else>
-          <p class="text-xs text-[#86868b] uppercase tracking-wider">this week</p>
-          <p class="text-2xl font-bold tracking-tight mt-1 text-white">{{ weeklyKm }}</p>
-          <p class="text-xs text-[#86868b]">km</p>
+          <p class="text-sm text-zinc-400 mb-0.5">This week</p>
+          <p class="text-2xl font-bold text-white">{{ weeklyKm }}</p>
+          <p class="text-sm text-zinc-600">km</p>
         </template>
       </div>
-      <div class="relative bg-white/[0.03] backdrop-blur-2xl rounded-2xl border border-white/[0.06] p-4 shadow-2xl overflow-hidden">
-        <div class="absolute left-0 top-0 bottom-0 w-[3px] bg-red-400 rounded-l-2xl" />
+      <div class="bg-card border border-zinc-800 rounded-xl p-4">
         <template v-if="isLoading">
-          <div class="animate-pulse space-y-2"><div class="h-3 w-16 bg-white/[0.08] rounded" /><div class="h-7 w-20 bg-white/[0.08] rounded" /><div class="h-3 w-10 bg-white/[0.08] rounded" /></div>
+          <div class="animate-pulse space-y-2"><div class="h-3 w-16 bg-zinc-800 rounded" /><div class="h-7 w-20 bg-zinc-800 rounded" /></div>
         </template>
         <template v-else>
-          <p class="text-xs text-[#86868b] uppercase tracking-wider">heart rate</p>
-          <p class="text-2xl font-bold tracking-tight mt-1 text-white">{{ avgHeartRate }}</p>
-          <p class="text-xs text-[#86868b]">avg bpm</p>
+          <p class="text-sm text-zinc-400 mb-0.5">Heart rate</p>
+          <p class="text-2xl font-bold text-white">{{ avgHeartRate }}</p>
+          <p class="text-sm text-zinc-600">bpm</p>
         </template>
       </div>
-      <div class="relative bg-white/[0.03] backdrop-blur-2xl rounded-2xl border border-white/[0.06] p-4 shadow-2xl overflow-hidden">
-        <div class="absolute left-0 top-0 bottom-0 w-[3px] bg-orange-400 rounded-l-2xl" />
+      <div class="bg-card border border-zinc-800 rounded-xl p-4">
         <template v-if="isLoading">
-          <div class="animate-pulse space-y-2"><div class="h-3 w-16 bg-white/[0.08] rounded" /><div class="h-7 w-20 bg-white/[0.08] rounded" /><div class="h-3 w-10 bg-white/[0.08] rounded" /></div>
+          <div class="animate-pulse space-y-2"><div class="h-3 w-16 bg-zinc-800 rounded" /><div class="h-7 w-20 bg-zinc-800 rounded" /></div>
         </template>
         <template v-else>
-          <p class="text-xs text-[#86868b] uppercase tracking-wider">elevation</p>
-          <p class="text-2xl font-bold tracking-tight mt-1 text-white">{{ totalElevation }}</p>
-          <p class="text-xs text-[#86868b]">m</p>
+          <p class="text-sm text-zinc-400 mb-0.5">Elevation</p>
+          <p class="text-2xl font-bold text-white">{{ totalElevation }}</p>
+          <p class="text-sm text-zinc-600">m</p>
         </template>
       </div>
     </div>
 
-    <div class="bg-white/[0.03] backdrop-blur-2xl rounded-2xl border border-white/[0.06] p-6 shadow-2xl mb-6">
-      <div class="flex items-center justify-between mb-3">
-        <p class="text-xs text-[#86868b] uppercase tracking-wider">weekly distance</p>
-        <span class="text-xs font-semibold px-2 py-0.5 rounded-full" :class="weeklyTrend >= 0 ? 'text-green-400 bg-green-400/10' : 'text-red-400 bg-red-400/10'">{{ weeklyTrend >= 0 ? '↑' : '↓' }} {{ Math.abs(weeklyTrend) }}%</span>
+    <div class="bg-card border border-zinc-800 rounded-xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm font-medium text-zinc-400">Weekly distance</p>
+        <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="weeklyTrend >= 0 ? 'text-accent bg-accent/10' : 'text-warning bg-warning/10'">{{ weeklyTrend >= 0 ? '+' : '' }}{{ weeklyTrend }}%</span>
       </div>
       <template v-if="isLoading">
-        <div class="animate-pulse flex items-end gap-3 h-[200px]">
-          <div v-for="i in 6" :key="i" class="flex-1 bg-white/[0.06] rounded-t-lg" :class="['h-3/4','h-1/2','h-5/6','h-2/3','h-4/5','h-3/5'][i-1]" />
+        <div class="animate-pulse flex items-end gap-3 h-[260px]">
+          <div v-for="i in 6" :key="i" class="flex-1 bg-zinc-800 rounded-t-lg" :class="['h-3/4','h-1/2','h-5/6','h-2/3','h-4/5','h-3/5'][i-1]" />
         </div>
       </template>
       <LineChart v-else-if="activities.length" :runs="activities" />
-      <p v-else class="text-sm text-[#86868b] text-center py-8">No data to display.</p>
+      <p v-else class="text-sm text-zinc-400 text-center py-12">No data to display.</p>
     </div>
   </section>
 </template>

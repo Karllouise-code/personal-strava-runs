@@ -1,44 +1,37 @@
 <template>
-  <div class="bg-[#0a0a0b] min-h-screen text-[#f5f5f7] antialiased relative">
+  <div class="bg-page min-h-screen text-[#f5f5f7] antialiased">
     <SetupPrompt v-if="showSetup" @setup="handleSetup" />
 
-    <header class="sticky top-0 z-20 bg-[#0a0a0b]/80 backdrop-blur-2xl border-b border-white/[0.06]">
-      <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-        <h1 class="text-lg font-semibold tracking-tight">My Running Journey</h1>
-        <div class="flex items-center gap-3">
+    <header class="sticky top-0 z-20 bg-page/80 backdrop-blur-xl border-b border-zinc-800">
+      <div class="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+        <h1 class="text-base font-semibold text-white shrink-0">My Running Journey</h1>
+        <nav class="hidden md:flex items-center gap-0.5">
+          <a v-for="s in navSections" :key="s.id" :href="'#'+s.id" @click.prevent="scrollToSection(s.id)" class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors" :class="activeSection === s.id ? 'text-white bg-zinc-800' : 'text-zinc-400 hover:text-zinc-200'">{{ s.label }}</a>
+        </nav>
+        <div class="flex items-center gap-3 shrink-0">
           <template v-if="authLoading">
-            <span class="text-xs text-[#86868b]">Loading...</span>
+            <span class="text-xs text-zinc-400">Loading...</span>
           </template>
           <template v-else-if="authUser">
-            <span class="text-xs text-[#86868b]">{{ authUser.firstname }} {{ authUser.lastname }}</span>
-            <button @click="logout" class="text-xs text-[#fc4c02] hover:text-[#e04302] transition-colors">Logout</button>
+            <span class="text-xs text-zinc-400">{{ authUser.firstname }} {{ authUser.lastname }}</span>
+            <button @click="logout" class="text-xs text-accent hover:text-accent/80 transition-colors">Logout</button>
           </template>
           <template v-else>
-            <a :href="authLoginUrl" class="text-xs text-[#fc4c02] hover:text-[#e04302] font-medium transition-colors">Login with Strava</a>
-
+            <a :href="authLoginUrl" class="text-xs text-accent hover:text-accent/80 font-medium transition-colors">Login with Strava</a>
           </template>
         </div>
       </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-6 py-8 space-y-10">
+    <main class="max-w-5xl mx-auto px-6 py-10 space-y-14">
       <StatsSection :activities="statsSourceActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" />
       <OverallGoalSection :goal-start-date="goalStartDate" :goal-kilometers="goalKilometers" :goal-distance="goalDistance" :goal-activities="goalActivities" :combine="combine" @update:goal-start-date="goalStartDate = $event" @update:goal-kilometers="goalKilometers = $event" />
       <WeeklyGoalSection :weekly-goal-kilometers="weeklyGoalKilometers" :weekly-goal-distance="weeklyGoalDistance" :weekly-goal-activities="weeklyGoalActivities" :weekly-start-date="weeklyStartDate" :combine="combine" @update:weekly-goal-kilometers="weeklyGoalKilometers = $event" />
       <ActivitiesSection :activities="sortedActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" :per-page="perPage" :search-name="searchName" :start-date="startDate" :end-date="endDate" :sort-key="sortKey" :sort-order="sortOrder" :start-date-min="startDateMin" :start-date-max="startDateMax" :end-date-min="endDateMin" :end-date-max="endDateMax" @update:combine="combine = $event" @update:active-tab="activeTab = $event" @update:search-name="searchName = $event" @update:start-date="onStartDateChange" @update:end-date="onEndDateChange" @update:per-page="perPage = $event" @sort="sortBy" @set-this-month="setThisMonth" />
     </main>
 
-    <nav class="fixed top-1/2 right-6 transform -translate-y-1/2 bg-white/[0.03] backdrop-blur-2xl rounded-2xl border border-white/[0.06] shadow-2xl p-3 z-30 hidden md:block">
-      <ul class="space-y-1">
-        <li><a href="#stats" @click.prevent="scrollToSection('stats')" class="block px-4 py-2 text-xs font-medium text-[#86868b] hover:text-[#fc4c02] rounded-xl hover:bg-white/[0.05] transition-colors">Stats</a></li>
-        <li><a href="#overall-goals" @click.prevent="scrollToSection('overall-goals')" class="block px-4 py-2 text-xs font-medium text-[#86868b] hover:text-[#fc4c02] rounded-xl hover:bg-white/[0.05] transition-colors">Goals</a></li>
-        <li><a href="#weekly-goals" @click.prevent="scrollToSection('weekly-goals')" class="block px-4 py-2 text-xs font-medium text-[#86868b] hover:text-[#fc4c02] rounded-xl hover:bg-white/[0.05] transition-colors">Weekly</a></li>
-        <li><a href="#recent-activities" @click.prevent="scrollToSection('recent-activities')" class="block px-4 py-2 text-xs font-medium text-[#86868b] hover:text-[#fc4c02] rounded-xl hover:bg-white/[0.05] transition-colors">Activities</a></li>
-      </ul>
-    </nav>
-
-    <footer class="border-t border-white/[0.06] text-center py-5">
-      <p class="text-xs text-[#86868b]">© 2025 Karl Louise Rito</p>
+    <footer class="border-t border-zinc-800 text-center py-6">
+      <p class="text-xs text-zinc-500">© 2025 Karl Louise Rito</p>
     </footer>
   </div>
 </template>
@@ -75,6 +68,14 @@ export default {
       authUser: null,
       authLoading: true,
       showSetup: false,
+      navSections: [
+        { id: 'stats', label: 'Stats' },
+        { id: 'overall-goals', label: 'Goals' },
+        { id: 'weekly-goals', label: 'Weekly' },
+        { id: 'recent-activities', label: 'Activities' },
+      ],
+      activeSection: 'stats',
+      observer: null,
     };
   },
   computed: {
@@ -339,6 +340,19 @@ export default {
         if (this.startDate < minStartStr) this.startDate = minStartStr;
       }
     },
+    initObserver() {
+      this.observer = new IntersectionObserver((entries) => {
+        const visible = entries.filter((e) => e.isIntersecting);
+        if (visible.length > 0) {
+          visible.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+          this.activeSection = visible[0].target.id;
+        }
+      }, { rootMargin: '-100px 0px -40% 0px', threshold: 0 });
+      for (const s of this.navSections) {
+        const el = document.getElementById(s.id);
+        if (el) this.observer.observe(el);
+      }
+    },
   },
   watch: {
     startDate() {
@@ -369,6 +383,7 @@ export default {
     },
   },
     mounted() {
+    this.$nextTick(() => this.initObserver());
     this.checkAuth().then(() => {
       if (!this.authUser) return;
       const onboardingDone = localStorage.getItem("onboardingComplete");
@@ -389,4 +404,6 @@ export default {
   },
 };
 </script>
+
+
 

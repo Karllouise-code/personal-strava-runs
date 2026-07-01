@@ -3,18 +3,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        dark: "#1a1a1a",
-        card: "#2d2d2d",
-        light: "#e0e0e0",
-        orange: {
-          600: "#fc4c02",
-        },
-        teal: {
-          500: "#2dd4bf",
-        },
-      },
-      scale: {
-        102: "1.02",
+        page: "#141416",
+        card: "#1c1c1e",
+        "card-hover": "#27272a",
+        accent: "#2dd4bf",
+        warning: "#fc4c02",
       },
     },
   },

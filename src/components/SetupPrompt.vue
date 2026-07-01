@@ -1,15 +1,12 @@
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-    <div class="bg-[#1c1c1e] border border-white/[0.08] rounded-3xl shadow-2xl p-8 w-full max-w-md mx-4">
-      <h2 class="text-2xl font-bold tracking-tight mb-2">Welcome! 👋</h2>
-      <p class="text-sm text-[#86868b] mb-6">Set your activity date range to get started. You can always change it later.</p>
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="bg-card border border-zinc-800 rounded-xl p-6 w-full max-w-md mx-4">
+      <h2 class="text-lg font-semibold tracking-tight mb-1">Welcome</h2>
+      <p class="text-sm text-zinc-400 mb-6">Set your activity date range to get started. You can always change it later.</p>
 
       <div class="space-y-5">
         <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium uppercase tracking-wider text-[#86868b] flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-[#5a5a5e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            From
-          </label>
+          <label class="text-xs text-zinc-400">From</label>
           <div class="relative dp-wrap">
             <VueDatePicker
               :model-value="toDate(localStart)"
@@ -25,10 +22,7 @@
           </div>
         </div>
         <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium uppercase tracking-wider text-[#86868b] flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-[#5a5a5e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            To
-          </label>
+          <label class="text-xs text-zinc-400">To</label>
           <div class="relative dp-wrap">
             <VueDatePicker
               :model-value="toDate(localEnd)"
@@ -46,14 +40,11 @@
         </div>
       </div>
 
-      <p class="text-xs text-[#5a5a5e] mt-4 flex items-center gap-1.5">
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        Maximum 5-month range to keep things fast.
-      </p>
+      <p class="text-xs text-zinc-600 mt-4">Maximum 5-month range to keep things fast.</p>
 
       <div class="flex gap-3 mt-6">
-        <button @click="skip" class="flex-1 px-5 py-3 rounded-xl text-sm font-medium text-[#86868b] hover:text-[#f5f5f7] border border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.03] active:scale-[0.98] transition-all duration-200">Skip</button>
-        <button @click="confirm" class="flex-1 px-5 py-3 rounded-xl text-sm font-medium bg-[#fc4c02] text-white hover:bg-[#e04302] hover:shadow-[0_0_20px_-6px_#fc4c02] active:scale-[0.98] transition-all duration-200">Get Started</button>
+        <button @click="skip" class="flex-1 px-5 py-3 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-700 transition-colors min-h-[44px]">Skip</button>
+        <button @click="confirm" class="flex-1 px-5 py-3 rounded-lg text-sm font-medium bg-accent text-white hover:bg-accent/90 transition-colors min-h-[44px]">Get Started</button>
       </div>
     </div>
   </div>
@@ -119,30 +110,32 @@ export default {
 
 <style>
 .dp-wrap .dp-input {
-  background: rgba(255,255,255,0.04) !important;
-  border: 1px solid rgba(255,255,255,0.07) !important;
+  background: transparent !important;
+  border-bottom: 1px solid #3f3f46 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-radius: 0 !important;
   color: #f5f5f7 !important;
-  padding: 14px 16px !important;
-  border-radius: 12px !important;
+  padding: 10px 0 !important;
   font-size: 0.875rem !important;
   line-height: 1.25rem !important;
-  min-height: 48px;
+  min-height: 40px;
   width: 100%;
-  transition: all 0.2s ease !important;
+  transition: border-color 0.2s ease !important;
 }
 .dp-wrap .dp-input:focus {
-  border-color: rgba(252, 76, 2, 0.6) !important;
-  background: rgba(255,255,255,0.06) !important;
-  box-shadow: 0 0 16px -6px #fc4c02 !important;
+  border-color: #2dd4bf !important;
+  box-shadow: none !important;
   outline: none !important;
 }
 .dp-wrap .dp-input::placeholder {
-  color: #5a5a5e !important;
+  color: #52525b !important;
 }
 .dp-wrap .dp__input_icon {
-  color: #5a5a5e !important;
+  color: #52525b !important;
 }
 .dp-wrap .dp__input_icon_pad {
-  padding-left: 40px !important;
+  padding-left: 0 !important;
 }
 </style>
