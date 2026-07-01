@@ -45,6 +45,10 @@
         <span>🏃‍♂️ Run: {{ runDistance }}</span>
         <span>🚶‍♂️ Walk: {{ walkDistance }}</span>
       </div>
+      <div v-if="projection" class="mt-3 pt-3 border-t border-white/[0.06] text-xs text-[#86868b] flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-[#fc4c02]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Consistent pace → goal by <span class="text-[#f5f5f7] font-medium">{{ projection }}</span>
+      </div>
     </div>
   </section>
 </template>
@@ -64,6 +68,24 @@ export default {
     },
     walkDistance() {
       return (this.goalActivities.filter((a) => a.type === "Walk").reduce((s, a) => s + Number(a.distance || 0), 0) / 1000).toFixed(1) + " km"
+    },
+    projection() {
+      const activities = this.goalActivities;
+      if (!activities.length || !this.goalStartDate) return null;
+
+      const totalKm = activities.reduce((s, a) => s + Number(a.distance || 0), 0) / 1000;
+      const remaining = this.goalKilometers - totalKm;
+      if (remaining <= 0) return null;
+
+      const start = new Date(this.goalStartDate);
+      const now = new Date();
+      const daysElapsed = Math.max(1, (now - start) / 86400000);
+      const avgKmPerDay = totalKm / daysElapsed;
+      if (avgKmPerDay <= 0) return null;
+
+      const daysRemaining = remaining / avgKmPerDay;
+      const projected = new Date(now.getTime() + daysRemaining * 86400000);
+      return projected.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
     },
   },
 };

@@ -54,13 +54,16 @@ import { db } from "./services/firebase.js";
 export default {
   components: { StatsSection, OverallGoalSection, WeeklyGoalSection, ActivitiesSection, SetupPrompt },
   data() {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     return {
       activities: [],
       sortKey: "start_date_local",
       sortOrder: -1,
       searchName: "",
-      startDate: "",
-      endDate: "",
+      startDate: firstDay.toISOString().split("T")[0],
+      endDate: lastDay.toISOString().split("T")[0],
       perPage: "10",
       activeTab: "runs",
       combine: false,
@@ -380,12 +383,6 @@ export default {
           this.showSetup = true;
         }
       } else {
-        const savedStart = localStorage.getItem("onboardingStartDate");
-        const savedEnd = localStorage.getItem("onboardingEndDate");
-        if (savedStart && savedEnd) {
-          this.startDate = savedStart;
-          this.endDate = savedEnd;
-        }
         this.fetchActivities();
       }
     });
