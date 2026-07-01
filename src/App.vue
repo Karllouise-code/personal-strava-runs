@@ -310,8 +310,10 @@ export default {
       if (this.weeklyGoalKilometers < 1) this.weeklyGoalKilometers = 1;
     },
   },
-  mounted() {
-    this.checkAuth().then(() => this.setThisMonth());
+    mounted() {
+    this.checkAuth().then(() => {
+      if (this.authUser) this.setThisMonth();
+    });
   },
 };
 </script>

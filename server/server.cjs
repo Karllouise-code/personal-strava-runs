@@ -70,11 +70,7 @@ function getTokens(req) {
       isSession: true,
     };
   }
-  return {
-    accessToken: STRAVA_ACCESS_TOKEN,
-    refreshToken: STRAVA_REFRESH_TOKEN,
-    isSession: false,
-  };
+  return { accessToken: null, refreshToken: null, isSession: false };
 }
 
 async function refreshTokens(req, res, tokens, isBearer) {
