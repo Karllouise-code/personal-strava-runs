@@ -30,14 +30,34 @@
           <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           <input :value="searchName" @input="$emit('update:searchName', $event.target.value)" placeholder="Search by name..." class="w-full bg-white/[0.04] border border-white/[0.07] text-[#f5f5f7] placeholder-[#5a5a5e] pl-9 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/60 focus:bg-white/[0.06] focus:shadow-[0_0_12px_-4px_#fc4c02] transition-all duration-200" />
         </div>
-        <div class="relative">
-          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a5e] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-          <input type="date" :value="startDate" :min="startDateMin" :max="startDateMax" @input="$emit('update:startDate', $event.target.value)" class="w-full sm:w-auto bg-white/[0.04] border border-white/[0.07] text-[#f5f5f7] pl-9 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/60 focus:bg-white/[0.06] focus:shadow-[0_0_12px_-4px_#fc4c02] transition-all duration-200 [color-scheme:dark]" />
+        <div class="relative dp-wrap">
+          <VueDatePicker
+            :model-value="toDate(startDate)"
+            @update:model-value="val => $emit('update:startDate', fmt(val))"
+            :min-date="toDate(startDateMin)"
+            :max-date="toDate(startDateMax)"
+            dark
+            auto-apply
+            :formats="{ input: 'MMM dd, yyyy' }"
+            placeholder="From"
+            input-class-name="dp-input"
+            :time-config="{ enableTimePicker: false }"
+          />
         </div>
         <span class="text-xs text-[#5a5a5e] font-medium hidden sm:inline -mx-1.5">—</span>
-        <div class="relative">
-          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a5e] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-          <input type="date" :value="endDate" :min="endDateMin" :max="endDateMax" @input="$emit('update:endDate', $event.target.value)" class="w-full sm:w-auto bg-white/[0.04] border border-white/[0.07] text-[#f5f5f7] pl-9 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/60 focus:bg-white/[0.06] focus:shadow-[0_0_12px_-4px_#fc4c02] transition-all duration-200 [color-scheme:dark]" />
+        <div class="relative dp-wrap">
+          <VueDatePicker
+            :model-value="toDate(endDate)"
+            @update:model-value="val => $emit('update:endDate', fmt(val))"
+            :min-date="toDate(endDateMin)"
+            :max-date="toDate(endDateMax)"
+            dark
+            auto-apply
+            :formats="{ input: 'MMM dd, yyyy' }"
+            placeholder="To"
+            input-class-name="dp-input"
+            :time-config="{ enableTimePicker: false }"
+          />
         </div>
         <button @click="$emit('setThisMonth')" class="bg-[#fc4c02] text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-[#e04302] hover:shadow-[0_0_16px_-4px_#fc4c02] active:scale-[0.97] transition-all duration-200 whitespace-nowrap">This Month</button>
         <div class="relative w-full sm:w-auto sm:ml-auto">
@@ -143,6 +163,12 @@ export default {
     },
   },
   methods: {
+    toDate(str) {
+      return str ? new Date(str + "T12:00:00") : null;
+    },
+    fmt(date) {
+      return date ? date.toISOString().split("T")[0] : "";
+    },
     prevPage() {
       if (this.page > 1) this.page--;
     },
@@ -162,3 +188,33 @@ export default {
   },
 };
 </script>
+
+<style>
+.dp-wrap .dp-input {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.07) !important;
+  color: #f5f5f7 !important;
+  padding: 10px 16px !important;
+  border-radius: 12px !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  min-height: 40px;
+  width: 100%;
+  transition: all 0.2s ease !important;
+}
+.dp-wrap .dp-input:focus {
+  border-color: rgba(252, 76, 2, 0.6) !important;
+  background: rgba(255,255,255,0.06) !important;
+  box-shadow: 0 0 12px -4px #fc4c02 !important;
+  outline: none !important;
+}
+.dp-wrap .dp-input::placeholder {
+  color: #5a5a5e !important;
+}
+.dp-wrap .dp__input_icon {
+  color: #5a5a5e !important;
+}
+.dp-wrap .dp__input_icon_pad {
+  padding-left: 40px !important;
+}
+</style>
