@@ -2,28 +2,52 @@
   <section id="recent-activities">
     <div class="flex items-center justify-between mb-5">
       <h2 class="text-xl font-semibold tracking-tight">Recent Activities</h2>
-      <label class="flex items-center gap-2 text-xs text-[#86868b] cursor-pointer select-none">
-        <input type="checkbox" :checked="combine" @change="$emit('update:combine', $event.target.checked)" class="w-4 h-4 rounded border-white/20 bg-white/5 checked:bg-[#fc4c02] checked:border-[#fc4c02] focus:ring-[#fc4c02] focus:ring-offset-0" />
-        Combine runs &amp; walks
+      <label class="flex items-center gap-2.5 text-xs text-[#86868b] cursor-pointer select-none group">
+        <span class="relative w-[18px] h-[18px] flex items-center justify-center">
+          <input type="checkbox" :checked="combine" @change="$emit('update:combine', $event.target.checked)" class="appearance-none w-[18px] h-[18px] rounded-md border border-white/[0.15] bg-white/[0.04] checked:bg-[#fc4c02] checked:border-[#fc4c02] focus:outline-none focus:ring-2 focus:ring-[#fc4c02]/30 transition-all duration-200 cursor-pointer" />
+          <svg v-if="combine" class="absolute w-3 h-3 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        </span>
+        <span class="group-hover:text-[#f5f5f7] transition-colors duration-200">Combine runs &amp; walks</span>
       </label>
     </div>
 
     <div class="bg-white/[0.03] backdrop-blur-2xl rounded-2xl border border-white/[0.06] shadow-2xl">
       <div class="flex border-b border-white/[0.06]">
-        <button :class="['flex-1 py-3.5 text-center text-sm font-medium tracking-wide transition-colors', activeTab === 'runs' ? 'text-[#fc4c02] border-b-2 border-[#fc4c02] -mb-[1px]' : 'text-[#86868b] hover:text-[#f5f5f7]']" @click="$emit('update:activeTab', 'runs')">Runs 🏃‍♂️</button>
-        <button :class="['flex-1 py-3.5 text-center text-sm font-medium tracking-wide transition-colors', activeTab === 'walks' ? 'text-[#fc4c02] border-b-2 border-[#fc4c02] -mb-[1px]' : 'text-[#86868b] hover:text-[#f5f5f7]']" @click="$emit('update:activeTab', 'walks')">Walks 🚶‍♂️</button>
+        <button :class="['flex-1 py-3.5 text-center text-sm font-medium tracking-wide transition-all duration-200 relative', activeTab === 'runs' ? 'text-[#fc4c02]' : 'text-[#86868b] hover:text-[#f5f5f7]']" @click="$emit('update:activeTab', 'runs')">
+          Runs
+          <span class="ml-1.5 opacity-60">🏃</span>
+          <span v-if="activeTab === 'runs'" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[#fc4c02] rounded-full"></span>
+        </button>
+        <button :class="['flex-1 py-3.5 text-center text-sm font-medium tracking-wide transition-all duration-200 relative', activeTab === 'walks' ? 'text-[#fc4c02]' : 'text-[#86868b] hover:text-[#f5f5f7]']" @click="$emit('update:activeTab', 'walks')">
+          Walks
+          <span class="ml-1.5 opacity-60">🚶</span>
+          <span v-if="activeTab === 'walks'" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[#fc4c02] rounded-full"></span>
+        </button>
       </div>
 
-      <div class="p-5 flex flex-col sm:flex-row gap-3">
-        <input :value="searchName" @input="$emit('update:searchName', $event.target.value)" placeholder="Search by name..." class="flex-1 bg-white/[0.05] border border-white/[0.08] text-[#f5f5f7] placeholder-[#86868b] px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/50 transition-colors" />
-        <input type="date" :value="startDate" :min="startDateMin" :max="startDateMax" @input="$emit('update:startDate', $event.target.value)" class="bg-white/[0.05] border border-white/[0.08] text-[#f5f5f7] px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/50 transition-colors w-full sm:w-auto" />
-        <input type="date" :value="endDate" :min="endDateMin" :max="endDateMax" @input="$emit('update:endDate', $event.target.value)" class="bg-white/[0.05] border border-white/[0.08] text-[#f5f5f7] px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/50 transition-colors w-full sm:w-auto" />
-        <select :value="perPage" @change="$emit('update:perPage', $event.target.value)" class="bg-white/[0.05] border border-white/[0.08] text-[#f5f5f7] px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/50 transition-colors w-full sm:w-auto">
-          <option value="10" class="bg-[#1c1c1e]">10</option>
-          <option value="20" class="bg-[#1c1c1e]">20</option>
-          <option value="50" class="bg-[#1c1c1e]">50</option>
-        </select>
-        <button @click="$emit('setThisMonth')" class="bg-[#fc4c02] text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-[#e04302] transition-colors">This Month</button>
+      <div class="p-5 flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
+        <div class="relative flex-1 min-w-[160px]">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input :value="searchName" @input="$emit('update:searchName', $event.target.value)" placeholder="Search by name..." class="w-full bg-white/[0.04] border border-white/[0.07] text-[#f5f5f7] placeholder-[#5a5a5e] pl-9 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/60 focus:bg-white/[0.06] focus:shadow-[0_0_12px_-4px_#fc4c02] transition-all duration-200" />
+        </div>
+        <div class="relative">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a5e] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <input type="date" :value="startDate" :min="startDateMin" :max="startDateMax" @input="$emit('update:startDate', $event.target.value)" class="w-full sm:w-auto bg-white/[0.04] border border-white/[0.07] text-[#f5f5f7] pl-9 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/60 focus:bg-white/[0.06] focus:shadow-[0_0_12px_-4px_#fc4c02] transition-all duration-200 [color-scheme:dark]" />
+        </div>
+        <span class="text-xs text-[#5a5a5e] font-medium hidden sm:inline -mx-1.5">—</span>
+        <div class="relative">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a5e] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <input type="date" :value="endDate" :min="endDateMin" :max="endDateMax" @input="$emit('update:endDate', $event.target.value)" class="w-full sm:w-auto bg-white/[0.04] border border-white/[0.07] text-[#f5f5f7] pl-9 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/60 focus:bg-white/[0.06] focus:shadow-[0_0_12px_-4px_#fc4c02] transition-all duration-200 [color-scheme:dark]" />
+        </div>
+        <button @click="$emit('setThisMonth')" class="bg-[#fc4c02] text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-[#e04302] hover:shadow-[0_0_16px_-4px_#fc4c02] active:scale-[0.97] transition-all duration-200 whitespace-nowrap">This Month</button>
+        <div class="relative w-full sm:w-auto sm:ml-auto">
+          <select :value="perPage" @change="$emit('update:perPage', $event.target.value)" class="w-full sm:w-auto appearance-none bg-white/[0.04] border border-white/[0.07] text-[#f5f5f7] pl-4 pr-10 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/60 focus:bg-white/[0.06] focus:shadow-[0_0_12px_-4px_#fc4c02] transition-all duration-200 cursor-pointer">
+            <option value="10" class="bg-[#1c1c1e]">10 per page</option>
+            <option value="20" class="bg-[#1c1c1e]">20 per page</option>
+            <option value="50" class="bg-[#1c1c1e]">50 per page</option>
+          </select>
+          <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a5e] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
       </div>
 
       <template v-if="isLoading">
@@ -59,10 +83,16 @@
             <p class="text-xs font-medium uppercase tracking-wider text-[#86868b]">Total</p>
             <p class="text-sm font-semibold text-white ml-2">{{ totalKm }}</p>
           </div>
-          <div class="flex items-center gap-3">
-            <button :disabled="page <= 1" class="text-xs text-[#86868b] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors" @click="prevPage">← Prev</button>
-            <span class="text-xs text-[#86868b]">Page {{ page }} of {{ totalPages }}</span>
-            <button :disabled="page >= totalPages" class="text-xs text-[#86868b] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors" @click="nextPage">Next →</button>
+          <div class="flex items-center gap-2">
+            <button :disabled="page <= 1" class="text-xs text-[#86868b] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed px-2.5 py-1.5 rounded-lg hover:bg-white/[0.05] transition-all duration-200" @click="prevPage">
+              <svg class="w-3.5 h-3.5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              <span class="ml-1">Prev</span>
+            </button>
+            <span class="text-xs text-[#5a5a5e] font-medium tabular-nums px-2">Page {{ page }} / {{ totalPages }}</span>
+            <button :disabled="page >= totalPages" class="text-xs text-[#86868b] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed px-2.5 py-1.5 rounded-lg hover:bg-white/[0.05] transition-all duration-200" @click="nextPage">
+              <span class="mr-1">Next</span>
+              <svg class="w-3.5 h-3.5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
           </div>
         </div>
       </div>

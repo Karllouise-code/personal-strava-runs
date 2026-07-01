@@ -5,8 +5,14 @@
       <p class="text-xs text-[#86868b] mb-4">Week of {{ weeklyStartDate }}</p>
       <div class="flex flex-col sm:flex-row gap-4 mb-5">
         <div class="flex flex-col gap-1.5">
-          <label for="weeklyGoalKilometers" class="text-xs font-medium uppercase tracking-wider text-[#86868b]">Weekly Target</label>
-          <input id="weeklyGoalKilometers" type="number" :value="weeklyGoalKilometers" @input="$emit('update:weeklyGoalKilometers', Number($event.target.value))" min="1" step="1" placeholder="38" class="bg-white/[0.05] border border-white/[0.08] text-[#f5f5f7] px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/50 transition-colors w-full sm:w-32" />
+          <label for="weeklyGoalKilometers" class="text-xs font-medium uppercase tracking-wider text-[#86868b] flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-[#5a5a5e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Weekly Target
+          </label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#5a5a5e] pointer-events-none font-medium">km</span>
+            <input id="weeklyGoalKilometers" type="number" :value="weeklyGoalKilometers" @input="$emit('update:weeklyGoalKilometers', Number($event.target.value))" min="1" step="1" placeholder="38" class="w-full sm:w-32 bg-white/[0.04] border border-white/[0.07] text-[#f5f5f7] pl-11 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/60 focus:bg-white/[0.06] focus:shadow-[0_0_12px_-4px_#fc4c02] transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+          </div>
         </div>
       </div>
       <div class="mb-3">
