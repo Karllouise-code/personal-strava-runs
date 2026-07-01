@@ -2,7 +2,17 @@
   <section id="overall-goals">
     <h2 class="text-lg font-semibold tracking-tight mb-4">Overall Goal</h2>
     <div class="bg-card border border-zinc-800 rounded-xl p-6">
-      <template v-if="!goalActivities.length && !goalStartDate">
+      <template v-if="isLoading">
+        <div class="animate-pulse space-y-4">
+          <div class="flex gap-4">
+            <div class="flex-1 space-y-2"><div class="h-3 w-16 bg-zinc-800 rounded" /><div class="h-9 bg-zinc-800 rounded" /></div>
+            <div class="flex-1 space-y-2"><div class="h-3 w-16 bg-zinc-800 rounded" /><div class="h-9 bg-zinc-800 rounded" /></div>
+            <div class="flex-1 space-y-2"><div class="h-3 w-16 bg-zinc-800 rounded" /><div class="h-9 bg-zinc-800 rounded" /></div>
+          </div>
+          <div class="space-y-2"><div class="h-4 w-full bg-zinc-800 rounded" /><div class="h-1.5 w-full bg-zinc-800 rounded-full" /></div>
+        </div>
+      </template>
+      <template v-else-if="!goalActivities.length && !goalStartDate">
         <p class="text-sm text-zinc-400">Set a start date, end date, and distance goal to track your overall progress.</p>
         <div class="flex flex-col sm:flex-row gap-4 mt-4">
           <div class="flex flex-col gap-1.5 flex-1">
@@ -113,6 +123,7 @@ export default {
     goalDistance: { type: String, required: true },
     goalActivities: { type: Array, required: true },
     combine: { type: Boolean, required: true },
+    isLoading: { type: Boolean, default: false },
   },
   computed: {
     runDistance() {

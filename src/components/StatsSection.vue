@@ -48,6 +48,30 @@
       </div>
     </div>
 
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <div class="bg-card border border-zinc-800 rounded-xl p-4">
+        <template v-if="isLoading">
+          <div class="animate-pulse space-y-2"><div class="h-3 w-20 bg-zinc-800 rounded" /><div class="h-7 w-16 bg-zinc-800 rounded" /></div>
+        </template>
+        <template v-else>
+          <p class="text-sm text-zinc-400 mb-0.5">This month</p>
+          <p class="text-2xl font-bold text-white">{{ monthKm }}</p>
+          <p class="text-sm text-zinc-600">km</p>
+          <p v-if="monthVsLastMonth" class="text-xs mt-1" :class="monthVsLastMonth > 0 ? 'text-accent' : 'text-warning'">{{ monthVsLastMonth > 0 ? '+' : '' }}{{ monthVsLastMonth }}% vs last month</p>
+        </template>
+      </div>
+      <div class="bg-card border border-zinc-800 rounded-xl p-4">
+        <template v-if="isLoading">
+          <div class="animate-pulse space-y-2"><div class="h-3 w-20 bg-zinc-800 rounded" /><div class="h-7 w-16 bg-zinc-800 rounded" /></div>
+        </template>
+        <template v-else>
+          <p class="text-sm text-zinc-400 mb-0.5">Activities</p>
+          <p class="text-2xl font-bold text-white">{{ activities.length }}</p>
+          <p class="text-sm text-zinc-600">total</p>
+        </template>
+      </div>
+    </div>
+
     <div class="bg-card border border-zinc-800 rounded-xl p-6">
       <div class="flex items-center justify-between mb-4">
         <p class="text-sm font-medium text-zinc-400">Weekly distance</p>
@@ -61,14 +85,28 @@
       <LineChart v-else-if="activities.length" :runs="activities" />
       <p v-else class="text-sm text-zinc-500 text-center py-12">No activity data — adjust filters or log a run to see weekly trends.</p>
     </div>
+
+    <div class="bg-card border border-zinc-800 rounded-xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm font-medium text-zinc-400">Pace trend</p>
+      </div>
+      <template v-if="isLoading">
+        <div class="animate-pulse flex items-end gap-3 h-[200px]">
+          <div v-for="i in 6" :key="i" class="flex-1 bg-zinc-800 rounded-t-lg" :class="['h-3/4','h-1/2','h-5/6','h-2/3','h-4/5','h-3/5'][i-1]" />
+        </div>
+      </template>
+      <PaceChart v-else-if="activities.length" :runs="activities" />
+      <p v-else class="text-sm text-zinc-500 text-center py-12">No activity data yet.</p>
+    </div>
   </section>
 </template>
 
 <script>
 import LineChart from "./LineChart.vue";
+import PaceChart from "./PaceChart.vue";
 
 export default {
-  components: { LineChart },
+  components: { LineChart, PaceChart },
   props: {
     activities: { type: Array, required: true },
     combine: { type: Boolean, required: true },
@@ -153,6 +191,30 @@ export default {
     totalElevation() {
       const elev = this.activities.reduce((s, a) => s + Number(a.total_elevation_gain || 0), 0);
       return Math.round(elev);
+    },
+    monthKm() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      const km = this.activities.filter((a) => {
+        const d = new Date(a.start_date_local); return d >= start && d <= end;
+      }).reduce((s, a) => s + Number(a.distance || 0), 0) / 1000;
+      return km.toFixed(1);
+    },
+    monthVsLastMonth() {
+      const now = new Date();
+      const startThis = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endThis = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      const startLast = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const endLast = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+      const thisKm = this.activities.filter((a) => {
+        const d = new Date(a.start_date_local); return d >= startThis && d <= endThis;
+      }).reduce((s, a) => s + Number(a.distance || 0), 0) / 1000;
+      const lastKm = this.activities.filter((a) => {
+        const d = new Date(a.start_date_local); return d >= startLast && d <= endLast;
+      }).reduce((s, a) => s + Number(a.distance || 0), 0) / 1000;
+      if (!lastKm) return thisKm > 0 ? null : null;
+      return Math.round(((thisKm - lastKm) / lastKm) * 100);
     },
   },
 };

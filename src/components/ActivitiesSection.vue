@@ -78,7 +78,7 @@
   <p class="text-xs text-zinc-500 mt-1">Try a different date range or search term.</p>
 </div>
       <div v-else class="divide-y divide-zinc-800/50">
-        <div v-for="activity in paginatedActivities" :key="activity.id" class="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/30 transition-colors min-h-[52px]">
+          <div v-for="activity in paginatedActivities" :key="activity.id" @click="selectActivity(activity)" class="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/30 transition-colors min-h-[52px] cursor-pointer">
           <span class="w-2 h-2 rounded-full flex-shrink-0" :class="activity.type === 'Run' ? 'bg-accent' : 'bg-zinc-500'"></span>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-zinc-200 truncate">{{ activity.name }}</p>
@@ -110,6 +110,64 @@
         </div>
       </div>
     </div>
+
+    <!-- Activity detail modal -->
+    <Teleport to="body">
+      <div v-if="detailActivity" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="closeDetail">
+        <div class="fixed inset-0 bg-black/60" @click="closeDetail"></div>
+        <div class="relative w-full sm:max-w-lg bg-card border border-zinc-800 rounded-t-2xl sm:rounded-2xl p-6 max-h-[85vh] overflow-y-auto shadow-2xl">
+          <button @click="closeDetail" class="absolute top-3 right-3 text-zinc-500 hover:text-zinc-300 min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+          <div class="flex items-center gap-3 mb-5">
+            <span class="w-3 h-3 rounded-full" :class="detailActivity.type === 'Run' ? 'bg-accent' : 'bg-zinc-500'"></span>
+            <div>
+              <h3 class="text-base font-semibold text-white">{{ detailActivity.name }}</h3>
+              <p class="text-xs text-zinc-400">{{ formatDate(detailActivity.start_date_local) }}</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="bg-zinc-800/50 rounded-lg p-3">
+              <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Distance</p>
+              <p class="text-lg font-bold text-white">{{ (detailActivity.distance / 1000).toFixed(2) }} <span class="text-sm font-normal text-zinc-400">km</span></p>
+            </div>
+            <div class="bg-zinc-800/50 rounded-lg p-3">
+              <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Duration</p>
+              <p class="text-lg font-bold text-white">{{ formatDuration(detailActivity.moving_time) }}</p>
+            </div>
+            <div class="bg-zinc-800/50 rounded-lg p-3">
+              <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Pace</p>
+              <p class="text-lg font-bold text-white">{{ formatPace(detailActivity) }} <span class="text-sm font-normal text-zinc-400">/km</span></p>
+            </div>
+            <div class="bg-zinc-800/50 rounded-lg p-3">
+              <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Elevation</p>
+              <p class="text-lg font-bold text-white">{{ Math.round(detailActivity.total_elevation_gain || 0) }} <span class="text-sm font-normal text-zinc-400">m</span></p>
+            </div>
+            <div v-if="detailActivity.average_heartrate" class="bg-zinc-800/50 rounded-lg p-3">
+              <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Avg HR</p>
+              <p class="text-lg font-bold text-white">{{ Math.round(detailActivity.average_heartrate) }} <span class="text-sm font-normal text-zinc-400">bpm</span></p>
+            </div>
+            <div v-if="detailActivity.max_heartrate" class="bg-zinc-800/50 rounded-lg p-3">
+              <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Max HR</p>
+              <p class="text-lg font-bold text-white">{{ Math.round(detailActivity.max_heartrate) }} <span class="text-sm font-normal text-zinc-400">bpm</span></p>
+            </div>
+          </div>
+          <div v-if="detailActivity.splits_metric && detailActivity.splits_metric.length" class="border-t border-zinc-800 pt-4">
+            <p class="text-xs font-medium text-zinc-400 mb-2">Splits</p>
+            <div class="space-y-1">
+              <div v-for="(split, i) in detailActivity.splits_metric" :key="i" class="flex items-center gap-3 text-xs">
+                <span class="text-zinc-500 w-6 font-medium tabular-nums">{{ i + 1 }}</span>
+                <div class="flex-1 bg-zinc-800 rounded-full h-1.5">
+                  <div :style="{ width: Math.min((split.distance / 1000 / 1) * 100, 100) + '%' }" class="bg-accent h-1.5 rounded-full"></div>
+                </div>
+                <span class="text-zinc-300 w-14 text-right tabular-nums">{{ split.moving_time ? formatSeconds(split.moving_time) : '—' }}</span>
+                <span class="text-zinc-500 w-12 text-right tabular-nums">{{ (split.distance / 1000).toFixed(2) }} km</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </section>
 </template>
 
@@ -134,6 +192,7 @@ export default {
   data() {
     return {
       page: 1,
+      detailActivity: null,
     };
   },
   computed: {
@@ -169,7 +228,32 @@ export default {
       if (this.page < this.totalPages) this.page++;
     },
     formatDate(date) {
-      return new Date(date).toLocaleDateString();
+      return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    },
+    formatDuration(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      if (h > 0) return `${h}h ${m}m`;
+      if (m > 0) return `${m}m ${s}s`;
+      return `${s}s`;
+    },
+    formatPace(activity) {
+      const paceMin = activity.moving_time / 60 / (activity.distance / 1000);
+      const mins = Math.floor(paceMin);
+      const secs = Math.round((paceMin - mins) * 60);
+      return `${mins}:${secs.toString().padStart(2, "0")}`;
+    },
+    formatSeconds(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m}:${s.toString().padStart(2, "0")}`;
+    },
+    selectActivity(activity) {
+      this.detailActivity = activity;
+    },
+    closeDetail() {
+      this.detailActivity = null;
     },
   },
 };

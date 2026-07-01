@@ -2,6 +2,14 @@
   <section id="weekly-goals">
     <h2 class="text-lg font-semibold tracking-tight mb-4">Weekly Goal</h2>
     <div class="bg-card border border-zinc-800 rounded-xl p-6">
+      <template v-if="isLoading">
+        <div class="animate-pulse space-y-3">
+          <div class="h-3 w-32 bg-zinc-800 rounded" />
+          <div class="h-9 w-28 bg-zinc-800 rounded" />
+          <div class="space-y-2"><div class="h-4 w-full bg-zinc-800 rounded" /><div class="h-1.5 w-full bg-zinc-800 rounded-full" /></div>
+        </div>
+      </template>
+      <template v-else>
       <p class="text-xs text-zinc-400 mb-4">Week of {{ weeklyStartDate }}</p>
       <div class="flex flex-col sm:flex-row gap-4 mb-5">
         <div class="flex flex-col gap-1.5">
@@ -26,6 +34,7 @@
         <span>Run: {{ runDistance }}</span>
         <span>Walk: {{ walkDistance }}</span>
       </div>
+      </template>
     </div>
   </section>
 </template>
@@ -38,6 +47,7 @@ export default {
     weeklyGoalActivities: { type: Array, required: true },
     weeklyStartDate: { type: String, required: true },
     combine: { type: Boolean, required: true },
+    isLoading: { type: Boolean, default: false },
   },
   computed: {
     runDistance() {

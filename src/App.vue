@@ -4,17 +4,20 @@
 
     <header class="sticky top-0 z-20 bg-page/80 backdrop-blur-xl border-b border-zinc-800">
       <div class="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
-        <h1 class="text-base font-semibold text-white shrink-0">My Running Journey</h1>
+        <h1 class="text-base font-semibold text-white shrink-0"><span class="hidden sm:inline">My Running Journey</span><span class="sm:hidden">MRJ</span></h1>
         <nav class="hidden md:flex items-center gap-0.5">
           <a v-for="s in navSections" :key="s.id" :href="'#'+s.id" @click.prevent="scrollToSection(s.id)" class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors" :class="activeSection === s.id ? 'text-white bg-zinc-800' : 'text-zinc-400 hover:text-zinc-200'">{{ s.label }}</a>
         </nav>
-        <div class="flex items-center gap-3 shrink-0">
+        <div class="flex items-center gap-1 sm:gap-3 overflow-hidden">
           <template v-if="authLoading">
-            <span class="text-xs text-zinc-400">Loading...</span>
+            <span class="text-xs text-zinc-400 whitespace-nowrap">Loading...</span>
           </template>
           <template v-else-if="authUser">
-            <span class="text-xs text-zinc-400">{{ authUser.firstname }} {{ authUser.lastname }}</span>
-            <button @click="logout" class="text-xs text-accent hover:text-accent/80 transition-colors">Logout</button>
+            <button @click="fetchActivities" title="Refresh data" class="text-zinc-400 hover:text-accent transition-colors shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center">
+              <svg :class="['w-4 h-4', isLoading ? 'animate-spin' : '']" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"/></svg>
+            </button>
+            <span class="text-xs text-zinc-400 truncate min-w-0">{{ authUser.firstname }} <span class="hidden sm:inline">{{ authUser.lastname }}</span></span>
+            <button @click="logout" class="text-xs text-accent hover:text-accent/80 transition-colors shrink-0 whitespace-nowrap">Logout</button>
           </template>
           <template v-else>
             <a :href="authLoginUrl" class="text-xs text-accent hover:text-accent/80 font-medium transition-colors">Login with Strava</a>
@@ -23,16 +26,21 @@
       </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-6 py-10 space-y-14">
+    <main class="max-w-5xl mx-auto px-6 py-10 pb-24 md:pb-10 space-y-14">
       <StatsSection :activities="statsSourceActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" :insight-text="insightText" />
-      <OverallGoalSection :goal-start-date="goalStartDate" :goal-end-date="goalEndDate" :goal-kilometers="goalKilometers" :goal-distance="goalDistance" :goal-activities="goalActivities" :combine="combine" @update:goal-start-date="goalStartDate = $event" @update:goal-end-date="goalEndDate = $event" @update:goal-kilometers="goalKilometers = $event" />
-      <WeeklyGoalSection :weekly-goal-kilometers="weeklyGoalKilometers" :weekly-goal-distance="weeklyGoalDistance" :weekly-goal-activities="weeklyGoalActivities" :weekly-start-date="weeklyStartDate" :combine="combine" @update:weekly-goal-kilometers="weeklyGoalKilometers = $event" />
+      <OverallGoalSection :goal-start-date="goalStartDate" :goal-end-date="goalEndDate" :goal-kilometers="goalKilometers" :goal-distance="goalDistance" :goal-activities="goalActivities" :combine="combine" :is-loading="isLoading" @update:goal-start-date="goalStartDate = $event" @update:goal-end-date="goalEndDate = $event" @update:goal-kilometers="goalKilometers = $event" />
+      <WeeklyGoalSection :weekly-goal-kilometers="weeklyGoalKilometers" :weekly-goal-distance="weeklyGoalDistance" :weekly-goal-activities="weeklyGoalActivities" :weekly-start-date="weeklyStartDate" :combine="combine" :is-loading="isLoading" @update:weekly-goal-kilometers="weeklyGoalKilometers = $event" />
       <ActivitiesSection :activities="sortedActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" :per-page="perPage" :search-name="searchName" :start-date="startDate" :end-date="endDate" :sort-key="sortKey" :sort-order="sortOrder" :start-date-min="startDateMin" :start-date-max="startDateMax" :end-date-min="endDateMin" :end-date-max="endDateMax" @update:combine="combine = $event" @update:active-tab="activeTab = $event" @update:search-name="searchName = $event" @update:start-date="onStartDateChange" @update:end-date="onEndDateChange" @update:per-page="perPage = $event" @sort="sortBy" @set-this-month="setThisMonth" />
     </main>
 
     <footer class="border-t border-zinc-800 text-center py-6">
       <p class="text-xs text-zinc-500">© 2025 Karl Louise Rito</p>
     </footer>
+    <nav class="fixed bottom-0 left-0 right-0 z-20 bg-page/90 backdrop-blur-xl border-t border-zinc-800 md:hidden flex safe-area-bottom">
+      <a v-for="s in navSections" :key="s.id" @click.prevent="scrollToSection(s.id)" class="flex-1 flex flex-col items-center gap-0.5 py-2 min-h-[56px] justify-center cursor-pointer transition-colors" :class="activeSection === s.id ? 'text-accent' : 'text-zinc-500 hover:text-zinc-300'">
+        <span class="text-[10px] font-medium leading-none">{{ s.label }}</span>
+      </a>
+    </nav>
   </div>
 </template>
 
