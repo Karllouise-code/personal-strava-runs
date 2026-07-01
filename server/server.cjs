@@ -39,7 +39,7 @@ app.use(
   })
 );
 
-const ALLOWED_ORIGINS = [FRONTEND_URL.replace(/\/+$/, ""), "https://karlritostrava.netlify.app", "http://localhost:5173"];
+const ALLOWED_ORIGINS = [FRONTEND_URL.replace(/\/+$/, ""), "https://runrito.netlify.app", "http://localhost:5173"];
 
 app.use(
   cors({

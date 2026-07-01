@@ -332,6 +332,7 @@ export default {
     },
     async logout() {
       this.authUser = null;
+      this.activities = [];
       sessionStorage.removeItem("stravaAthlete");
       sessionStorage.removeItem("stravaTokens");
       try {
