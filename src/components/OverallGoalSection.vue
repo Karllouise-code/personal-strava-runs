@@ -84,13 +84,19 @@
           <span>Run: {{ runDistance }}</span>
           <span>Walk: {{ walkDistance }}</span>
         </div>
-        <div v-if="requiredPace" class="mt-3 pt-3 border-t border-zinc-800 text-xs text-zinc-400 flex items-start gap-1.5">
+        <div v-if="requiredPace" class="mt-3 pt-3 border-t border-zinc-800 text-xs flex items-start gap-1.5">
           <svg class="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          <div>
-            <span class="text-accent font-medium">{{ requiredPace.weekly }} km/week</span>
-            <span v-if="requiredPace.daily" class="text-zinc-500"> ({{ requiredPace.daily }} km/day)</span>
-            <span> &rarr; finish by </span>
-            <span class="text-zinc-300 font-medium">{{ requiredPace.deadline }}</span>
+          <div class="space-y-0.5 leading-tight">
+            <div class="text-zinc-400">
+              <span class="text-zinc-500">Required pace: </span>
+              <span class="text-accent font-medium">{{ requiredPace.weekly }} km/week</span>
+              <span v-if="requiredPace.high" title="More than 30 km/week required" class="ml-2 text-[10px] font-medium text-warning bg-warning/10 px-1.5 py-0.5 rounded">High required pace</span>
+            </div>
+            <div class="text-zinc-600">
+              <span v-if="requiredPace.daily">{{ requiredPace.daily }} km/day &middot; </span>
+              <span>finish by </span>
+              <span class="text-zinc-500 font-medium">{{ requiredPace.deadline }}</span>
+            </div>
           </div>
         </div>
       </template>
@@ -135,8 +141,9 @@ export default {
       const requiredKmPerDay = remaining / remainingDays;
       const weekly = (requiredKmPerDay * 7).toFixed(1);
       const daily = requiredKmPerDay >= 0.1 ? requiredKmPerDay.toFixed(1) : null;
+      const high = Number(weekly) > 30;
       const deadlineStr = deadline.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-      return { weekly, daily, deadline: deadlineStr };
+      return { weekly, daily, deadline: deadlineStr, high };
     },
     trackStatus() {
       const activities = this.goalActivities;
