@@ -73,7 +73,10 @@
           </div>
         </div>
       </template>
-      <p v-else-if="!activities.length" class="px-4 pb-4 text-sm text-zinc-400">No {{ combine ? "activities" : activeTab === "runs" ? "runs" : "walks" }} match your filters.</p>
+      <div v-else-if="!activities.length" class="px-4 py-8 text-center">
+  <p class="text-sm text-zinc-400">No {{ combine ? "activities" : activeTab === "runs" ? "runs" : "walks" }} match your filters.</p>
+  <p class="text-xs text-zinc-500 mt-1">Try a different date range or search term.</p>
+</div>
       <div v-else class="divide-y divide-zinc-800/50">
         <div v-for="activity in paginatedActivities" :key="activity.id" class="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/30 transition-colors min-h-[52px]">
           <span class="w-2 h-2 rounded-full flex-shrink-0" :class="activity.type === 'Run' ? 'bg-accent' : 'bg-zinc-500'"></span>

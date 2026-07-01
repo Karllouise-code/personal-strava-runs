@@ -1,5 +1,9 @@
 <template>
   <section id="stats">
+    <div v-if="insightText && !isLoading" class="bg-accent/10 rounded-lg px-4 py-2 mb-4 leading-snug">
+      <p class="text-sm text-accent font-medium">{{ insightText }}</p>
+    </div>
+
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
       <div class="bg-card border border-zinc-800 rounded-xl p-4">
         <template v-if="isLoading">
@@ -19,6 +23,7 @@
           <p class="text-sm text-zinc-400 mb-0.5">This week</p>
           <p class="text-2xl font-bold text-white">{{ weeklyKm }}</p>
           <p class="text-sm text-zinc-600">km</p>
+          <p v-if="kmVsLastWeek !== null" class="text-xs mt-1" :class="kmVsLastWeek > 0 ? 'text-accent' : kmVsLastWeek < 0 ? 'text-warning' : 'text-zinc-500'">{{ kmVsLastWeek > 0 ? '+' : '' }}{{ kmVsLastWeek.toFixed(1) }} vs last week</p>
         </template>
       </div>
       <div class="bg-card border border-zinc-800 rounded-xl p-4">
@@ -54,7 +59,7 @@
         </div>
       </template>
       <LineChart v-else-if="activities.length" :runs="activities" />
-      <p v-else class="text-sm text-zinc-400 text-center py-12">No data to display.</p>
+      <p v-else class="text-sm text-zinc-500 text-center py-12">No activity data — adjust filters or log a run to see weekly trends.</p>
     </div>
   </section>
 </template>
@@ -69,6 +74,7 @@ export default {
     combine: { type: Boolean, required: true },
     activeTab: { type: String, required: true },
     isLoading: { type: Boolean, required: true },
+    insightText: { type: String, default: null },
   },
   computed: {
     formattedPace() {
@@ -116,6 +122,28 @@ export default {
       }).reduce((s, a) => s + Number(a.distance || 0), 0) / 1000;
       if (!lastKm) return thisKm > 0 ? 100 : 0;
       return Math.round(((thisKm - lastKm) / lastKm) * 100);
+    },
+    kmVsLastWeek() {
+      const now = new Date();
+      const startThisWeek = new Date(now);
+      startThisWeek.setDate(now.getDate() - now.getDay());
+      startThisWeek.setHours(0, 0, 0, 0);
+      const endThisWeek = new Date(startThisWeek);
+      endThisWeek.setDate(startThisWeek.getDate() + 6);
+      endThisWeek.setHours(23, 59, 59, 999);
+      const startLastWeek = new Date(startThisWeek);
+      startLastWeek.setDate(startThisWeek.getDate() - 7);
+      const endLastWeek = new Date(startLastWeek);
+      endLastWeek.setDate(startLastWeek.getDate() + 6);
+      endLastWeek.setHours(23, 59, 59, 999);
+      const thisKm = this.activities.filter((a) => {
+        const d = new Date(a.start_date_local); return d >= startThisWeek && d <= endThisWeek;
+      }).reduce((s, a) => s + Number(a.distance || 0), 0) / 1000;
+      const lastKm = this.activities.filter((a) => {
+        const d = new Date(a.start_date_local); return d >= startLastWeek && d <= endLastWeek;
+      }).reduce((s, a) => s + Number(a.distance || 0), 0) / 1000;
+      if (!lastKm) return null;
+      return thisKm - lastKm;
     },
     avgHeartRate() {
       const hrs = this.activities.map((a) => Number(a.average_heartrate)).filter((h) => h > 0);

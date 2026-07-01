@@ -24,8 +24,8 @@
     </header>
 
     <main class="max-w-5xl mx-auto px-6 py-10 space-y-14">
-      <StatsSection :activities="statsSourceActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" />
-      <OverallGoalSection :goal-start-date="goalStartDate" :goal-kilometers="goalKilometers" :goal-distance="goalDistance" :goal-activities="goalActivities" :combine="combine" @update:goal-start-date="goalStartDate = $event" @update:goal-kilometers="goalKilometers = $event" />
+      <StatsSection :activities="statsSourceActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" :insight-text="insightText" />
+      <OverallGoalSection :goal-start-date="goalStartDate" :goal-end-date="goalEndDate" :goal-kilometers="goalKilometers" :goal-distance="goalDistance" :goal-activities="goalActivities" :combine="combine" @update:goal-start-date="goalStartDate = $event" @update:goal-end-date="goalEndDate = $event" @update:goal-kilometers="goalKilometers = $event" />
       <WeeklyGoalSection :weekly-goal-kilometers="weeklyGoalKilometers" :weekly-goal-distance="weeklyGoalDistance" :weekly-goal-activities="weeklyGoalActivities" :weekly-start-date="weeklyStartDate" :combine="combine" @update:weekly-goal-kilometers="weeklyGoalKilometers = $event" />
       <ActivitiesSection :activities="sortedActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" :per-page="perPage" :search-name="searchName" :start-date="startDate" :end-date="endDate" :sort-key="sortKey" :sort-order="sortOrder" :start-date-min="startDateMin" :start-date-max="startDateMax" :end-date-min="endDateMin" :end-date-max="endDateMax" @update:combine="combine = $event" @update:active-tab="activeTab = $event" @update:search-name="searchName = $event" @update:start-date="onStartDateChange" @update:end-date="onEndDateChange" @update:per-page="perPage = $event" @sort="sortBy" @set-this-month="setThisMonth" />
     </main>
@@ -61,6 +61,7 @@ export default {
       activeTab: "runs",
       combine: false,
       goalStartDate: localStorage.getItem("goalStartDate") || "",
+      goalEndDate: localStorage.getItem("goalEndDate") || "",
       goalKilometers: Number(localStorage.getItem("goalKilometers")) || 500,
       weeklyGoalKilometers: Number(localStorage.getItem("weeklyGoalKilometers")) || 38,
       isLoading: false,
@@ -183,6 +184,37 @@ export default {
       const d = new Date(this.endDate);
       d.setMonth(d.getMonth() - 5);
       return d.toISOString().split("T")[0];
+    },
+    insightText() {
+      if (!this.activities.length) return null;
+      const weeklyKm = Number(this.weeklyGoalDistance);
+      const weeklyTarget = this.weeklyGoalKilometers;
+      if (weeklyTarget > 0 && weeklyKm > 0) {
+        const remaining = weeklyTarget - weeklyKm;
+        if (remaining > 0) return `${remaining.toFixed(1)} km left to hit this week's ${weeklyTarget} km goal`;
+        if (remaining <= 0) return `Weekly goal reached — ${weeklyKm.toFixed(1)} / ${weeklyTarget} km`;
+      }
+      const streak = this.currentStreak;
+      if (streak > 1) return `${streak}-day streak — keep it going`;
+      return `${this.activities.length} activities in this period`;
+    },
+    currentStreak() {
+      if (!this.activities.length) return 0;
+      const dateSet = new Set();
+      this.activities.forEach(a => { dateSet.add(a.start_date_local.split('T')[0]); });
+      const dates = Array.from(dateSet).sort((a, b) => new Date(b) - new Date(a));
+      if (!dates.length) return 0;
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const mostRecent = new Date(dates[0] + 'T12:00:00');
+      if (Math.round((today - mostRecent) / 86400000) > 1) return 0;
+      let streak = 1;
+      for (let i = 1; i < dates.length; i++) {
+        const prev = new Date(dates[i-1] + 'T12:00:00');
+        const curr = new Date(dates[i] + 'T12:00:00');
+        if (Math.round((prev - curr) / 86400000) === 1) streak++;
+        else break;
+      }
+      return streak;
     },
   },
   methods: {
@@ -372,6 +404,9 @@ export default {
     goalStartDate(val) {
       localStorage.setItem("goalStartDate", val);
       this.debouncedFetch();
+    },
+    goalEndDate(val) {
+      localStorage.setItem("goalEndDate", val);
     },
     goalKilometers(val) {
       localStorage.setItem("goalKilometers", val);
