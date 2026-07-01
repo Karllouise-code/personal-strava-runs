@@ -16,8 +16,8 @@
 
       <div class="p-5 flex flex-col sm:flex-row gap-3">
         <input :value="searchName" @input="$emit('update:searchName', $event.target.value)" placeholder="Search by name..." class="flex-1 bg-white/[0.05] border border-white/[0.08] text-[#f5f5f7] placeholder-[#86868b] px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/50 transition-colors" />
-        <input type="date" :value="startDate" @input="$emit('update:startDate', $event.target.value)" class="bg-white/[0.05] border border-white/[0.08] text-[#f5f5f7] px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/50 transition-colors w-full sm:w-auto" />
-        <input type="date" :value="endDate" @input="$emit('update:endDate', $event.target.value)" class="bg-white/[0.05] border border-white/[0.08] text-[#f5f5f7] px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/50 transition-colors w-full sm:w-auto" />
+        <input type="date" :value="startDate" :min="startDateMin" :max="startDateMax" @input="$emit('update:startDate', $event.target.value)" class="bg-white/[0.05] border border-white/[0.08] text-[#f5f5f7] px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/50 transition-colors w-full sm:w-auto" />
+        <input type="date" :value="endDate" :min="endDateMin" :max="endDateMax" @input="$emit('update:endDate', $event.target.value)" class="bg-white/[0.05] border border-white/[0.08] text-[#f5f5f7] px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/50 transition-colors w-full sm:w-auto" />
         <select :value="perPage" @change="$emit('update:perPage', $event.target.value)" class="bg-white/[0.05] border border-white/[0.08] text-[#f5f5f7] px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#fc4c02]/50 transition-colors w-full sm:w-auto">
           <option value="10" class="bg-[#1c1c1e]">10</option>
           <option value="20" class="bg-[#1c1c1e]">20</option>
@@ -83,6 +83,10 @@ export default {
     endDate: { type: String, required: true },
     sortKey: { type: String, required: true },
     sortOrder: { type: Number, required: true },
+    startDateMin: { type: String, default: null },
+    startDateMax: { type: String, default: null },
+    endDateMin: { type: String, default: null },
+    endDateMax: { type: String, default: null },
   },
   data() {
     return {

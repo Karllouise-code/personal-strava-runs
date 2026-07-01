@@ -1,5 +1,7 @@
 <template>
   <div class="bg-[#0a0a0b] min-h-screen text-[#f5f5f7] antialiased relative">
+    <SetupPrompt v-if="showSetup" @setup="handleSetup" />
+
     <header class="sticky top-0 z-20 bg-[#0a0a0b]/80 backdrop-blur-2xl border-b border-white/[0.06]">
       <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
         <h1 class="text-lg font-semibold tracking-tight">My Running Journey</h1>
@@ -23,7 +25,7 @@
       <StatsSection :activities="statsSourceActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" />
       <OverallGoalSection :goal-start-date="goalStartDate" :goal-kilometers="goalKilometers" :goal-distance="goalDistance" :goal-activities="goalActivities" :combine="combine" @update:goal-start-date="goalStartDate = $event" @update:goal-kilometers="goalKilometers = $event" />
       <WeeklyGoalSection :weekly-goal-kilometers="weeklyGoalKilometers" :weekly-goal-distance="weeklyGoalDistance" :weekly-goal-activities="weeklyGoalActivities" :weekly-start-date="weeklyStartDate" :combine="combine" @update:weekly-goal-kilometers="weeklyGoalKilometers = $event" />
-      <ActivitiesSection :activities="sortedActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" :per-page="perPage" :search-name="searchName" :start-date="startDate" :end-date="endDate" :sort-key="sortKey" :sort-order="sortOrder" @update:combine="combine = $event" @update:active-tab="activeTab = $event" @update:search-name="searchName = $event" @update:start-date="startDate = $event" @update:end-date="endDate = $event" @update:per-page="perPage = $event" @sort="sortBy" @set-this-month="setThisMonth" />
+      <ActivitiesSection :activities="sortedActivities" :combine="combine" :active-tab="activeTab" :is-loading="isLoading" :per-page="perPage" :search-name="searchName" :start-date="startDate" :end-date="endDate" :sort-key="sortKey" :sort-order="sortOrder" :start-date-min="startDateMin" :start-date-max="startDateMax" :end-date-min="endDateMin" :end-date-max="endDateMax" @update:combine="combine = $event" @update:active-tab="activeTab = $event" @update:search-name="searchName = $event" @update:start-date="onStartDateChange" @update:end-date="onEndDateChange" @update:per-page="perPage = $event" @sort="sortBy" @set-this-month="setThisMonth" />
     </main>
 
     <nav class="fixed top-1/2 right-6 transform -translate-y-1/2 bg-white/[0.03] backdrop-blur-2xl rounded-2xl border border-white/[0.06] shadow-2xl p-3 z-30 hidden md:block">
@@ -46,10 +48,11 @@ import StatsSection from "./components/StatsSection.vue";
 import OverallGoalSection from "./components/OverallGoalSection.vue";
 import WeeklyGoalSection from "./components/WeeklyGoalSection.vue";
 import ActivitiesSection from "./components/ActivitiesSection.vue";
+import SetupPrompt from "./components/SetupPrompt.vue";
 import { db } from "./services/firebase.js";
 
 export default {
-  components: { StatsSection, OverallGoalSection, WeeklyGoalSection, ActivitiesSection },
+  components: { StatsSection, OverallGoalSection, WeeklyGoalSection, ActivitiesSection, SetupPrompt },
   data() {
     return {
       activities: [],
@@ -68,6 +71,7 @@ export default {
       fetchTimeout: null,
       authUser: null,
       authLoading: true,
+      showSetup: false,
     };
   },
   computed: {
@@ -153,6 +157,28 @@ export default {
       const distance = this.weeklyGoalActivities.reduce((sum, activity) => sum + Number(activity.distance || 0), 0) / 1000;
       console.log("Weekly Goal Distance:", distance, "Activities:", this.weeklyGoalActivities);
       return distance.toFixed(1);
+    },
+    startDateMax() {
+      if (!this.startDate) return null;
+      const d = new Date(this.startDate);
+      d.setMonth(d.getMonth() + 5);
+      return d.toISOString().split("T")[0];
+    },
+    endDateMin() {
+      if (!this.endDate || !this.startDate) return null;
+      return this.startDate;
+    },
+    endDateMax() {
+      if (!this.startDate) return null;
+      const d = new Date(this.startDate);
+      d.setMonth(d.getMonth() + 5);
+      return d.toISOString().split("T")[0];
+    },
+    startDateMin() {
+      if (!this.endDate) return null;
+      const d = new Date(this.endDate);
+      d.setMonth(d.getMonth() - 5);
+      return d.toISOString().split("T")[0];
     },
   },
   methods: {
@@ -281,6 +307,35 @@ export default {
         console.warn(`Section with ID ${sectionId} not found`);
       }
     },
+    handleSetup(data) {
+      this.showSetup = false;
+      localStorage.setItem("onboardingComplete", "true");
+      if (data) {
+        this.startDate = data.startDate;
+        this.endDate = data.endDate;
+        localStorage.setItem("onboardingStartDate", data.startDate);
+        localStorage.setItem("onboardingEndDate", data.endDate);
+      }
+      this.fetchActivities();
+    },
+    onStartDateChange(val) {
+      this.startDate = val;
+      if (this.startDate && this.endDate) {
+        const maxEnd = new Date(this.startDate);
+        maxEnd.setMonth(maxEnd.getMonth() + 5);
+        const maxEndStr = maxEnd.toISOString().split("T")[0];
+        if (this.endDate > maxEndStr) this.endDate = maxEndStr;
+      }
+    },
+    onEndDateChange(val) {
+      this.endDate = val;
+      if (this.startDate && this.endDate) {
+        const minStart = new Date(this.endDate);
+        minStart.setMonth(minStart.getMonth() - 5);
+        const minStartStr = minStart.toISOString().split("T")[0];
+        if (this.startDate < minStartStr) this.startDate = minStartStr;
+      }
+    },
   },
   watch: {
     startDate() {
@@ -312,7 +367,27 @@ export default {
   },
     mounted() {
     this.checkAuth().then(() => {
-      if (this.authUser) this.setThisMonth();
+      if (!this.authUser) return;
+      const onboardingDone = localStorage.getItem("onboardingComplete");
+      if (!onboardingDone) {
+        const savedStart = localStorage.getItem("onboardingStartDate");
+        const savedEnd = localStorage.getItem("onboardingEndDate");
+        if (savedStart && savedEnd) {
+          this.startDate = savedStart;
+          this.endDate = savedEnd;
+          this.fetchActivities();
+        } else {
+          this.showSetup = true;
+        }
+      } else {
+        const savedStart = localStorage.getItem("onboardingStartDate");
+        const savedEnd = localStorage.getItem("onboardingEndDate");
+        if (savedStart && savedEnd) {
+          this.startDate = savedStart;
+          this.endDate = savedEnd;
+        }
+        this.fetchActivities();
+      }
     });
   },
 };
